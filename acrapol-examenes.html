@@ -1001,12 +1001,12 @@ function dlTemplate(){
 // ══ CARGA AUTOMÁTICA DESDE GITHUB ══
 // URL del Excel en el repositorio GitHub (rama main, carpeta raíz)
 // Cambiar por la URL raw de tu repo
-const EXCEL_URL = 'PENDIENTE_URL_GITHUB_RAW';
+const EXCEL_URL = https://github.com/Acrapol-IA/Base-de-datos/blob/main/BANCO_UNIFICADO_PREGUNTAS.xlsx;
 
 window.addEventListener('DOMContentLoaded', ()=>{ cargarDesdeGithub(); });
 
 function cargarDesdeGithub(){
-  if(EXCEL_URL === 'PENDIENTE_URL_GITHUB_RAW') return;
+  if(EXCEL_URL === https://github.com/Acrapol-IA/Base-de-datos/blob/main/BANCO_UNIFICADO_PREGUNTAS.xlsx) return;
   const msg = document.getElementById('uploadMsg');
   msg.innerHTML = `<div class="alert a-info"><span class="spin"></span>&nbsp;Cargando base de datos desde GitHub…</div>`;
   fetch(EXCEL_URL)
