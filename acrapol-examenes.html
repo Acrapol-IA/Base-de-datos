@@ -177,8 +177,8 @@ tbody tr:last-child td{border-bottom:none;}
 .ul{font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt3);}
 .uv{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;color:var(--txt3);font-weight:500;}
 
-.tema-cfg-hdr{display:grid;grid-template-columns:32px 1fr 90px 130px 110px;gap:.5rem;align-items:center;padding:.45rem .85rem;background:var(--s3);border-radius:3px 3px 0 0;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.7rem;color:var(--txt3);margin-bottom:0;}
-.tema-cfg-row{display:grid;grid-template-columns:32px 1fr 90px 130px 110px;gap:.5rem;align-items:center;padding:.55rem .85rem;border-bottom:1px solid var(--borde);transition:background .15s;}
+.tema-cfg-hdr{display:grid;grid-template-columns:32px 1fr 90px 130px 110px 40px;gap:.5rem;align-items:center;padding:.45rem .85rem;background:var(--s3);border-radius:3px 3px 0 0;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.7rem;color:var(--txt3);margin-bottom:0;}
+.tema-cfg-row{display:grid;grid-template-columns:32px 1fr 90px 130px 110px 40px;gap:.5rem;align-items:center;padding:.55rem .85rem;border-bottom:1px solid var(--borde);transition:background .15s;}
 .tema-cfg-row:last-child{border-bottom:none;}
 .tema-cfg-row:hover{background:rgba(255,255,255,.015);}
 .tema-cfg-row.activo{background:rgba(212,156,48,.04);}
@@ -194,6 +194,19 @@ tbody tr:last-child td{border-bottom:none;}
 .tema-cfg-row:not(.activo) .tdif select,
 .tema-cfg-row:not(.activo) .tnpregs input{opacity:.3;pointer-events:none;}
 .blq-sep-row{grid-column:1/-1;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.75rem;padding:.6rem .85rem .3rem;color:var(--txt3);border-bottom:1px solid var(--borde);}
+.tema-add-btn{width:26px;height:26px;border-radius:3px;border:1px solid var(--dorado);background:var(--dorado-dim);color:var(--dorado);font-size:.95rem;font-weight:600;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;justify-self:center;}
+.tema-add-btn:hover{background:var(--dorado);color:var(--negro);}
+
+/* EXAMEN EN PREPARACIÓN — lista compacta */
+.prep-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .85rem;border-bottom:1px solid var(--borde);font-size:.82rem;}
+.prep-row:last-child{border-bottom:none;}
+.prep-row:hover{background:rgba(255,255,255,.018);}
+.prep-tema{color:var(--txt);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prep-dif{color:var(--dorado);font-family:'IBM Plex Mono',monospace;font-size:.76rem;flex-shrink:0;}
+.prep-n{color:var(--txt2);font-family:'IBM Plex Mono',monospace;font-size:.76rem;flex-shrink:0;white-space:nowrap;}
+.prep-sep{color:var(--txt3);flex-shrink:0;}
+.prep-del{background:none;border:none;color:var(--txt3);font-size:.9rem;cursor:pointer;padding:.15rem .4rem;flex-shrink:0;border-radius:3px;transition:all .15s;}
+.prep-del:hover{color:#e05555;background:rgba(205,22,25,.12);}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--s4);border-top-color:var(--dorado);border-radius:50%;animation:rot .7s linear infinite;vertical-align:middle;}
 @keyframes rot{to{transform:rotate(360deg);}}
 ::-webkit-scrollbar{width:5px;height:5px;}
@@ -373,7 +386,7 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ctitle">
         <div class="cico" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;">03</div>
         <h2>Temas, dificultad y preguntas</h2>
-        <span style="margin-left:.5rem;font-size:.72rem;color:var(--txt3);">Activa los temas y configura cada uno</span>
+        <span style="margin-left:.5rem;font-size:.72rem;color:var(--txt3);">Configura un tema y pulsa + para añadirlo al examen</span>
         <div style="margin-left:auto;display:flex;gap:.5rem;">
           <button class="btn btn-ghost" style="font-size:.68rem;" onclick="selTodosLosTemas()">✔ Todos</button>
           <button class="btn btn-ghost" style="font-size:.68rem;" onclick="deselTodosLosTemas()">✕ Ninguno</button>
@@ -385,6 +398,7 @@ tbody tr:last-child td{border-bottom:none;}
         <div style="text-align:center;">Disponibles</div>
         <div style="text-align:center;">Dificultad</div>
         <div style="text-align:center;">Nº Preguntas</div>
+        <div></div>
       </div>
       <div id="temasCfgList"></div>
       <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--borde);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
@@ -392,7 +406,6 @@ tbody tr:last-child td{border-bottom:none;}
           Total: <span id="totalSelLabel" style="font-family:'IBM Plex Mono',monospace;color:var(--dorado);font-size:1rem;font-weight:600;">0</span> preguntas
         </div>
         <div id="genMsg"></div>
-        <button class="btn btn-gold" onclick="agregarAExamen()" id="btnAgregar" style="margin-left:auto;" disabled>➕ Agregar a Examen</button>
       </div>
     </div>
 
@@ -401,8 +414,12 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ctitle">
         <div class="cico">🧩</div>
         <h2>Examen en preparación</h2>
-        <span style="margin-left:.5rem;font-size:.72rem;color:var(--txt3);">Selecciones acumuladas antes de generar</span>
+        <span style="margin-left:.5rem;font-size:.72rem;color:var(--txt3);">Temas acumulados antes de generar</span>
         <button class="btn btn-ghost" style="margin-left:auto;font-size:.68rem;" onclick="vaciarExamenPrep()">🗑 Vaciar examen</button>
+      </div>
+      <div class="fg" style="max-width:360px;margin-bottom:1.1rem;">
+        <label for="examNombreInput">Nombre del examen (opcional)</label>
+        <input type="text" id="examNombreInput" placeholder="Ej: Simulacro Módulo 1 - Semana 3">
       </div>
       <div id="prepList"></div>
       <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--borde);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
@@ -532,7 +549,6 @@ function procesarBuffer(buffer, nombre){
       document.getElementById('statsCard').style.display='block';
       document.getElementById('uZone').classList.add('ok');
       document.getElementById('btnExp').disabled=false;
-      // btnAgregar se habilita via updBtnAgregar() cuando hay curso+tema activos
       document.getElementById('noBD').style.display='none';
       msg.innerHTML=`<div class="alert a-ok">✅ <strong>${db.length.toLocaleString()} preguntas</strong> cargadas desde <strong>${esc(nombre)}</strong></div>`;
   }catch(err){msg.innerHTML=`<div class="alert a-err">❌ Error: ${esc(err.message)}</div>`;}
@@ -814,7 +830,6 @@ function toggleCurso(key, label){
   else{selCursos.add(key);el.classList.add('on');}
   const names=[...selCursos].map(k=>CURSO_LABEL[k]||k);
   document.getElementById('cursoHint').textContent=names.length?'Seleccionados: '+names.join(' · '):'Ningún curso seleccionado';
-  updBtnAgregar();
 }
 
 // ── PASO 2: BLOQUE ──
@@ -900,7 +915,6 @@ function buildTemasCfg(){
   temasCfg=nuevosCfg;
   wrap.style.display='block';
   updTotal();
-  updBtnAgregar();
 }
 
 function buildTemaRow(t, bv, cfg, key){
@@ -946,7 +960,8 @@ function buildTemaRow(t, bv, cfg, key){
     <div class="tnpregs">
       <input type="number" value="${cfg.nPregs}" min="1" max="999"
         oninput="updTemaCfg('${key.replace(/'/g,"\'")}','nPregs',+this.value);updTotal()">
-    </div>`;
+    </div>
+    <button type="button" class="tema-add-btn" title="Añadir este tema al examen" onclick="agregarTema('${key.replace(/'/g,"\'")}')">+</button>`;
   return row;
 }
 
@@ -957,7 +972,7 @@ function toggleTemaActivo(t, checkEl){
   checkEl.classList.toggle('on',cfg.activo);
   const row=checkEl.closest('.tema-cfg-row');
   row.classList.toggle('activo',cfg.activo);
-  updTotal(); updBtnAgregar();
+  updTotal();
 }
 
 function updTemaCfg(t, key, val){
@@ -971,7 +986,7 @@ function selTodosLosTemas(){
     const row=document.querySelector(`.tema-cfg-row[data-tema="${CSS.escape(t)}"]`);
     if(row){row.classList.add('activo');const cb=row.querySelector('.tcb');if(cb)cb.classList.add('on');}
   });
-  updTotal(); updBtnAgregar();
+  updTotal();
 }
 
 function deselTodosLosTemas(){
@@ -980,7 +995,7 @@ function deselTodosLosTemas(){
     const row=document.querySelector(`.tema-cfg-row[data-tema="${CSS.escape(t)}"]`);
     if(row){row.classList.remove('activo');const cb=row.querySelector('.tcb');if(cb)cb.classList.remove('on');}
   });
-  updTotal(); updBtnAgregar();
+  updTotal();
 }
 
 function updTotal(){
@@ -989,37 +1004,28 @@ function updTotal(){
   document.getElementById('totalSelLabel').textContent=tot.toLocaleString();
 }
 
-function updBtnAgregar(){
-  const ok=selCursos.size>0 && [...temasCfg.values()].some(c=>c.activo);
-  document.getElementById('btnAgregar').disabled=!ok;
-}
-
 // ══ EXAMEN EN PREPARACIÓN (varias selecciones acumuladas) ══
 let examenPreparacion=[]; // [{ cursosArr, cursoLabel, temasActivos:[[key,cfgClone],...], numPreguntas }]
 
-function agregarAExamen(){
+function agregarTema(key){
   if(!selCursos.size){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Selecciona al menos un curso.</span>';return;}
-  const temasActivos=[...temasCfg.entries()].filter(([,c])=>c.activo);
-  if(!temasActivos.length){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Activa al menos un tema.</span>';return;}
+  const cfg=temasCfg.get(key);
+  if(!cfg) return;
   document.getElementById('genMsg').innerHTML='';
 
   const cursosArr=[...selCursos];
   const cursoLabel=cursosArr.map(k=>CURSO_LABEL[k]||k).join(' + ');
-  const temasClone=temasActivos.map(([t,c])=>[t,{...c}]);
-  const numPreguntas=temasClone.reduce((s,[,c])=>s+(c.nPregs||0),0);
+  const numPreguntas=cfg.nPregs||10;
 
-  examenPreparacion.push({ cursosArr, cursoLabel, temasActivos:temasClone, numPreguntas });
+  examenPreparacion.push({ cursosArr, cursoLabel, temasActivos:[[key,{...cfg}]], numPreguntas });
 
-  // Limpiar solo bloques/temas/dificultad/nº preguntas para la siguiente parte del examen.
-  // El/los curso(s) seleccionados se mantienen.
-  selBloques.clear(); temasCfg.clear();
-  ['jur','soc','tec','ofi'].forEach(b=>{const el=document.getElementById('bbtn-'+b);if(el)el.classList.remove('on');});
-  document.getElementById('bloqueHint').textContent='Ningún bloque seleccionado';
-  document.getElementById('paso3Card').style.display='none';
-  updBtnAgregar();
+  // Solo se resetea la selección de temas para configurar el siguiente.
+  // El/los curso(s) y el/los bloque(s) seleccionados se mantienen.
+  temasCfg.clear();
+  buildTemasCfg();
 
   renderPrep();
-  mostrarToast('✅ Selección añadida al examen en preparación');
+  mostrarToast('✅ Tema añadido al examen en preparación');
 }
 
 function renderPrep(){
@@ -1034,20 +1040,16 @@ function renderPrep(){
   }
   card.style.display='block';
   list.innerHTML=examenPreparacion.map((s,i)=>{
-    const temasLabel=s.temasActivos.map(([,c])=>{
-      const label=c._label||c._tema||'';
-      return label?`${label} (${c.dif||'Todas'})`:'';
-    }).filter(Boolean).join(', ');
-    return `<div class="q-card">
-      <div class="q-num">${i+1}</div>
-      <div class="q-body">
-        <div class="q-text" style="margin-bottom:.3rem;">${esc(s.cursoLabel)}</div>
-        <div style="font-size:.75rem;color:var(--txt3);">${esc(temasLabel)}</div>
-      </div>
-      <div class="q-meta" style="flex-direction:row;align-items:center;gap:1rem;">
-        <div style="text-align:right;"><div class="ul">Preguntas</div><div class="uv">${s.numPreguntas}</div></div>
-        <button class="btn btn-danger" style="font-size:.68rem;padding:.4rem .8rem;" onclick="eliminarSeleccionPrep(${i})">🗑</button>
-      </div>
+    const [,cfg]=s.temasActivos[0]||[null,{}];
+    const label=cfg._label||cfg._tema||'';
+    const dif=cfg.dif||'Todas';
+    return `<div class="prep-row">
+      <span class="prep-tema" title="${esc(label)}">${esc(label)}</span>
+      <span class="prep-sep">·</span>
+      <span class="prep-dif">${esc(dif)}</span>
+      <span class="prep-sep">·</span>
+      <span class="prep-n">${s.numPreguntas} preguntas</span>
+      <button class="prep-del" onclick="eliminarSeleccionPrep(${i})" title="Eliminar">✕</button>
     </div>`;
   }).join('');
   const total=examenPreparacion.reduce((s,x)=>s+x.numPreguntas,0);
@@ -1150,9 +1152,12 @@ function genExamFromPrep(){
   // Ordenar por ID
   selTotal.sort((a,b)=>String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));
 
+  const nombreInput=document.getElementById('examNombreInput');
+  const nombreExamen=(nombreInput?.value||'').trim();
+
   examCount++; renderStats(); renderTable();
   actualizarUsosenSheets(selTotal);
-  guardarExamenEnSheets(selTotal);
+  guardarExamenEnSheets(selTotal, nombreExamen);
 
   const cursoLabel=cursoKeysVistos.map(k=>CURSO_LABEL[k]||k).join(' + ');
   const tLabel=[...temasLabelsSet].join(', ');
@@ -1163,6 +1168,7 @@ function genExamFromPrep(){
 
   currentExam={
     id:examCount,
+    nombre:nombreExamen||null,
     cursoLabel,
     num:selTotal.length,
     dif:difLabel,
@@ -1171,8 +1177,11 @@ function genExamFromPrep(){
     preguntas:selTotal
   };
 
-  // El examen ya generado vacía el examen en preparación
+  mostrarToast(nombreExamen?`✅ Examen "${nombreExamen}" generado (${selTotal.length} preguntas)`:`✅ Examen #${examCount} generado (${selTotal.length} preguntas)`);
+
+  // El examen ya generado vacía el examen en preparación y el nombre introducido
   examenPreparacion=[];
+  if(nombreInput) nombreInput.value='';
   renderPrep();
 
   goTab('historial');
@@ -1342,7 +1351,7 @@ function actualizarUsosenSheets(preguntas, cursosArr){
 }
 
 // ══ HISTORIAL DE EXÁMENES ══
-function guardarExamenEnSheets(preguntas){
+function guardarExamenEnSheets(preguntas, nombreExamen){
   const fecha    = new Date().toLocaleDateString('es-ES');
   const total    = preguntas.length;
 
@@ -1379,7 +1388,10 @@ function guardarExamenEnSheets(preguntas){
     ]);
   });
 
-  const exam = { rows };
+  // "nombre" se envía aparte de las filas: es un dato del examen completo,
+  // no de cada pregunta. Si se deja vacío, el sistema de identificación actual
+  // (fecha, examen_id, curso, etc.) sigue funcionando igual.
+  const exam = { rows, nombre: nombreExamen||'' };
   const encoded = encodeURIComponent(JSON.stringify(exam));
   fetch(`https://script.google.com/macros/s/AKfycbz8A8boQzNJDScZEb0-LN-5FofUZ4Zkb6ObjroLlz7-GoCE3HLEHFsRzkZWNVJAJOzo/exec?action=saveExamen&exam=${encoded}`)
     .then(r=>r.json())
@@ -1410,6 +1422,7 @@ function cargarHistorial(){
             <tr style="background:var(--s3);">
               <th style="${TH}text-align:left;">Fecha</th>
               <th style="${TH}text-align:center;">#</th>
+              <th style="${TH}text-align:left;">Nombre</th>
               <th style="${TH}text-align:left;">Curso</th>
               <th style="${TH}text-align:left;">Bloque</th>
               <th style="${TH}text-align:left;">Subbloque</th>
@@ -1421,6 +1434,7 @@ function cargarHistorial(){
               <tr style="border-bottom:1px solid var(--borde);">
                 <td style="${TD}">${(()=>{const d=new Date(r.fecha);return isNaN(d)?esc(String(r.fecha)):d.toLocaleDateString('es-ES');})()}</td>
                 <td style="${TDc}font-family:'IBM Plex Mono',monospace;color:var(--dorado);">#${r.examen_id}</td>
+                <td style="${TD}max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(String(r.nombre||''))}">${esc(String(r.nombre||'—'))}</td>
                 <td style="${TD}">${esc(String(r.curso||'—'))}</td>
                 <td style="${TD}max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(String(r.bloque||''))}">${esc(String(r.bloque||'—'))}</td>
                 <td style="${TD}max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(String(r.subbloque||''))}">${esc(String(r.subbloque||'—'))}</td>
