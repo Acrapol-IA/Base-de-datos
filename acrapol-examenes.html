@@ -1034,7 +1034,10 @@ function renderPrep(){
   }
   card.style.display='block';
   list.innerHTML=examenPreparacion.map((s,i)=>{
-    const temasLabel=s.temasActivos.map(([,c])=>c._label||c._tema||'').filter(Boolean).join(', ');
+    const temasLabel=s.temasActivos.map(([,c])=>{
+      const label=c._label||c._tema||'';
+      return label?`${label} (${c.dif||'Todas'})`:'';
+    }).filter(Boolean).join(', ');
     return `<div class="q-card">
       <div class="q-num">${i+1}</div>
       <div class="q-body">
@@ -1122,23 +1125,24 @@ function genExamFromPrep(){
   document.getElementById('genMsgFinal').innerHTML='';
 
   let selTotal=[];
-  const cursosUnion=new Set();
   const temasLabelsSet=new Set();
+  const cursoLabelsVistos=[];
 
   for(const seleccion of examenPreparacion){
-    const {cursosArr, temasActivos} = seleccion;
-    cursosArr.forEach(k=>cursosUnion.add(k));
+    const {cursosArr, temasActivos, cursoLabel} = seleccion;
     temasActivos.forEach(([t])=>temasLabelsSet.add(t));
+    if(!cursoLabelsVistos.includes(cursoLabel)) cursoLabelsVistos.push(cursoLabel);
 
     const sel=procesarSeleccion(cursosArr, temasActivos);
 
-    // Incrementar contadores en TODOS los cursos de esta selección
+    // Incrementar contadores SOLO en los cursos propios de esta selección
     sel.forEach(q=>{
       const r=db.find(r=>r._idx===q._idx);
       if(r) cursosArr.forEach(k=>{ r[k]=(r[k]||0)+1; });
     });
 
-    selTotal=selTotal.concat(sel);
+    // Copia con el curso de esta selección, para registrar el examen sin mezclar cursos entre selecciones
+    selTotal=selTotal.concat(sel.map(q=>({...q, _cursoLabel:cursoLabel})));
   }
 
   if(!selTotal.length){document.getElementById('genMsgFinal').innerHTML='<span style="color:#e05555;font-size:.8rem;">❌ No hay preguntas disponibles.</span>';return;}
@@ -1146,12 +1150,11 @@ function genExamFromPrep(){
   // Ordenar por ID
   selTotal.sort((a,b)=>String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));
 
-  const cursosArr=[...cursosUnion];
   examCount++; renderStats(); renderTable();
-  actualizarUsosenSheets(selTotal, cursosArr);
-  guardarExamenEnSheets(selTotal, cursosArr);
+  actualizarUsosenSheets(selTotal);
+  guardarExamenEnSheets(selTotal);
 
-  const cursoLabel=cursosArr.map(k=>CURSO_LABEL[k]||k).join(' + ');
+  const cursoLabel=cursoLabelsVistos.join(' + ');
   const tLabel=[...temasLabelsSet].join(', ');
 
   // Calcular dificultades usadas en el examen
@@ -1160,7 +1163,7 @@ function genExamFromPrep(){
 
   currentExam={
     id:examCount,
-    cursosArr,cursoLabel,
+    cursoLabel,
     num:selTotal.length,
     dif:difLabel,
     temas:tLabel,
@@ -1339,26 +1342,29 @@ function actualizarUsosenSheets(preguntas, cursosArr){
 }
 
 // ══ HISTORIAL DE EXÁMENES ══
-function guardarExamenEnSheets(preguntas, cursosArr){
+function guardarExamenEnSheets(preguntas){
   const fecha    = new Date().toLocaleDateString('es-ES');
-  const curso    = cursosArr.map(k=>CURSO_LABEL[k]||k).join(' + ');
   const total    = preguntas.length;
 
   // Construir filas: una por pregunta, repetir solo cuando cambia
   const rows = [];
-  let lastFecha='', lastId='', lastCurso='', lastTotal='', lastBloque='', lastSub='';
+  let lastCurso='', lastBloque='', lastSub='';
 
   preguntas.forEach((q,i)=>{
     const bloqueReal = q.bloque==='Preguntas Oficiales' ? q.subbloque : q.bloque;
     const subReal    = q.promo || '';
+    const cursoReal  = q._cursoLabel || '';
 
     const fFecha  = (i===0)               ? fecha       : '';
     const fId     = (i===0)               ? examCount   : '';
-    const fCurso  = (i===0)               ? curso       : '';
+    // El curso se muestra por pregunta según la selección de la que proviene,
+    // repitiendo solo cuando cambia (igual que bloque/subbloque)
+    const fCurso  = (cursoReal!==lastCurso) ? cursoReal : '';
     const fTotal  = (i===0)               ? total       : '';
     const fBloque = (bloqueReal!==lastBloque) ? bloqueReal : '';
     const fSub    = (subReal!==lastSub || bloqueReal!==lastBloque) ? subReal : '';
 
+    lastCurso  = cursoReal;
     lastBloque = bloqueReal;
     lastSub    = subReal;
 
