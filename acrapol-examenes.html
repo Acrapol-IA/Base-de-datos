@@ -392,7 +392,25 @@ tbody tr:last-child td{border-bottom:none;}
           Total: <span id="totalSelLabel" style="font-family:'IBM Plex Mono',monospace;color:var(--dorado);font-size:1rem;font-weight:600;">0</span> preguntas
         </div>
         <div id="genMsg"></div>
-        <button class="btn btn-red" onclick="genExam()" id="btnGen" style="margin-left:auto;" disabled>⚡ Generar Examen</button>
+        <button class="btn btn-gold" onclick="agregarAExamen()" id="btnAgregar" style="margin-left:auto;" disabled>➕ Agregar a Examen</button>
+      </div>
+    </div>
+
+    <!-- EXAMEN EN PREPARACIÓN -->
+    <div class="card" id="prepCard" style="display:none;">
+      <div class="ctitle">
+        <div class="cico">🧩</div>
+        <h2>Examen en preparación</h2>
+        <span style="margin-left:.5rem;font-size:.72rem;color:var(--txt3);">Selecciones acumuladas antes de generar</span>
+        <button class="btn btn-ghost" style="margin-left:auto;font-size:.68rem;" onclick="vaciarExamenPrep()">🗑 Vaciar examen</button>
+      </div>
+      <div id="prepList"></div>
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--borde);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <div style="font-size:.82rem;color:var(--txt2);">
+          Total acumulado: <span id="totalPrepLabel" style="font-family:'IBM Plex Mono',monospace;color:var(--dorado);font-size:1rem;font-weight:600;">0</span> preguntas
+        </div>
+        <div id="genMsgFinal"></div>
+        <button class="btn btn-red" onclick="genExamFromPrep()" id="btnGen" style="margin-left:auto;" disabled>⚡ Generar Examen</button>
       </div>
     </div>
 
@@ -503,17 +521,18 @@ function procesarBuffer(buffer, nombre){
       renderStats();
       buildFilterTema('');
       renderTable();
-      selCursos.clear(); selBloques.clear(); temasCfg.clear();
+      selCursos.clear(); selBloques.clear(); temasCfg.clear(); examenPreparacion=[];
       ['mod1','mod2','mod3','int'].forEach(b=>{const el=document.getElementById('cb-'+b);if(el)el.classList.remove('on');});
       ['jur','soc','tec','ofi'].forEach(b=>{const el=document.getElementById('bbtn-'+b);if(el)el.classList.remove('on');});
       document.getElementById('cursoHint').textContent='Ningún curso seleccionado';
       document.getElementById('bloqueHint').textContent='Ningún bloque seleccionado';
       document.getElementById('paso3Card').style.display='none';
+      renderPrep();
       document.getElementById('tblCard').style.display='block';
       document.getElementById('statsCard').style.display='block';
       document.getElementById('uZone').classList.add('ok');
       document.getElementById('btnExp').disabled=false;
-      // btnGen se habilita via updBtnGen() cuando hay curso+tema activos
+      // btnAgregar se habilita via updBtnAgregar() cuando hay curso+tema activos
       document.getElementById('noBD').style.display='none';
       msg.innerHTML=`<div class="alert a-ok">✅ <strong>${db.length.toLocaleString()} preguntas</strong> cargadas desde <strong>${esc(nombre)}</strong></div>`;
   }catch(err){msg.innerHTML=`<div class="alert a-err">❌ Error: ${esc(err.message)}</div>`;}
@@ -795,7 +814,7 @@ function toggleCurso(key, label){
   else{selCursos.add(key);el.classList.add('on');}
   const names=[...selCursos].map(k=>CURSO_LABEL[k]||k);
   document.getElementById('cursoHint').textContent=names.length?'Seleccionados: '+names.join(' · '):'Ningún curso seleccionado';
-  updBtnGen();
+  updBtnAgregar();
 }
 
 // ── PASO 2: BLOQUE ──
@@ -855,14 +874,14 @@ function buildTemasCfg(){
           promos.forEach(pr=>{
             const key='OFI::'+bo+'::'+pr;
             const prev=temasCfg.get(key)||{activo:false,dif:'',nPregs:10};
-            nuevosCfg.set(key,{...prev,_bo:bo,_promo:pr,_bloque:bk});
+            nuevosCfg.set(key,{...prev,_bo:bo,_promo:pr,_bloque:bk,_label:pr});
             list.appendChild(buildTemaRow(pr, bv, prev, key));
           });
         } else {
           // Sin promociones → una sola fila para el bloque oficial
           const key='OFI::'+bo;
           const prev=temasCfg.get(key)||{activo:false,dif:'',nPregs:10};
-          nuevosCfg.set(key,{...prev,_bo:bo,_bloque:bk});
+          nuevosCfg.set(key,{...prev,_bo:bo,_bloque:bk,_label:bo});
           list.appendChild(buildTemaRow(bo, bv, prev, key));
         }
       });
@@ -872,7 +891,7 @@ function buildTemasCfg(){
       if(!temas.length) continue;
       temas.forEach(t=>{
         const prev=temasCfg.get(t)||{activo:false,dif:'',nPregs:10};
-        nuevosCfg.set(t,{...prev,_tema:t,_bloque:bk});
+        nuevosCfg.set(t,{...prev,_tema:t,_bloque:bk,_label:t});
         list.appendChild(buildTemaRow(t, bv, prev, t));
       });
     }
@@ -881,7 +900,7 @@ function buildTemasCfg(){
   temasCfg=nuevosCfg;
   wrap.style.display='block';
   updTotal();
-  updBtnGen();
+  updBtnAgregar();
 }
 
 function buildTemaRow(t, bv, cfg, key){
@@ -938,7 +957,7 @@ function toggleTemaActivo(t, checkEl){
   checkEl.classList.toggle('on',cfg.activo);
   const row=checkEl.closest('.tema-cfg-row');
   row.classList.toggle('activo',cfg.activo);
-  updTotal(); updBtnGen();
+  updTotal(); updBtnAgregar();
 }
 
 function updTemaCfg(t, key, val){
@@ -952,7 +971,7 @@ function selTodosLosTemas(){
     const row=document.querySelector(`.tema-cfg-row[data-tema="${CSS.escape(t)}"]`);
     if(row){row.classList.add('activo');const cb=row.querySelector('.tcb');if(cb)cb.classList.add('on');}
   });
-  updTotal(); updBtnGen();
+  updTotal(); updBtnAgregar();
 }
 
 function deselTodosLosTemas(){
@@ -961,7 +980,7 @@ function deselTodosLosTemas(){
     const row=document.querySelector(`.tema-cfg-row[data-tema="${CSS.escape(t)}"]`);
     if(row){row.classList.remove('activo');const cb=row.querySelector('.tcb');if(cb)cb.classList.remove('on');}
   });
-  updTotal(); updBtnGen();
+  updTotal(); updBtnAgregar();
 }
 
 function updTotal(){
@@ -970,18 +989,83 @@ function updTotal(){
   document.getElementById('totalSelLabel').textContent=tot.toLocaleString();
 }
 
-function updBtnGen(){
+function updBtnAgregar(){
   const ok=selCursos.size>0 && [...temasCfg.values()].some(c=>c.activo);
-  document.getElementById('btnGen').disabled=!ok;
+  document.getElementById('btnAgregar').disabled=!ok;
 }
 
-// ══ GENERAR ══
-function genExam(){
+// ══ EXAMEN EN PREPARACIÓN (varias selecciones acumuladas) ══
+let examenPreparacion=[]; // [{ cursosArr, cursoLabel, temasActivos:[[key,cfgClone],...], numPreguntas }]
+
+function agregarAExamen(){
   if(!selCursos.size){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Selecciona al menos un curso.</span>';return;}
   const temasActivos=[...temasCfg.entries()].filter(([,c])=>c.activo);
   if(!temasActivos.length){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Activa al menos un tema.</span>';return;}
+  document.getElementById('genMsg').innerHTML='';
 
   const cursosArr=[...selCursos];
+  const cursoLabel=cursosArr.map(k=>CURSO_LABEL[k]||k).join(' + ');
+  const temasClone=temasActivos.map(([t,c])=>[t,{...c}]);
+  const numPreguntas=temasClone.reduce((s,[,c])=>s+(c.nPregs||0),0);
+
+  examenPreparacion.push({ cursosArr, cursoLabel, temasActivos:temasClone, numPreguntas });
+
+  // Limpiar solo bloques/temas/dificultad/nº preguntas para la siguiente parte del examen.
+  // El/los curso(s) seleccionados se mantienen.
+  selBloques.clear(); temasCfg.clear();
+  ['jur','soc','tec','ofi'].forEach(b=>{const el=document.getElementById('bbtn-'+b);if(el)el.classList.remove('on');});
+  document.getElementById('bloqueHint').textContent='Ningún bloque seleccionado';
+  document.getElementById('paso3Card').style.display='none';
+  updBtnAgregar();
+
+  renderPrep();
+  mostrarToast('✅ Selección añadida al examen en preparación');
+}
+
+function renderPrep(){
+  const card=document.getElementById('prepCard');
+  const list=document.getElementById('prepList');
+  if(!examenPreparacion.length){
+    card.style.display='none';
+    list.innerHTML='';
+    document.getElementById('totalPrepLabel').textContent='0';
+    document.getElementById('btnGen').disabled=true;
+    return;
+  }
+  card.style.display='block';
+  list.innerHTML=examenPreparacion.map((s,i)=>{
+    const temasLabel=s.temasActivos.map(([,c])=>c._label||c._tema||'').filter(Boolean).join(', ');
+    return `<div class="q-card">
+      <div class="q-num">${i+1}</div>
+      <div class="q-body">
+        <div class="q-text" style="margin-bottom:.3rem;">${esc(s.cursoLabel)}</div>
+        <div style="font-size:.75rem;color:var(--txt3);">${esc(temasLabel)}</div>
+      </div>
+      <div class="q-meta" style="flex-direction:row;align-items:center;gap:1rem;">
+        <div style="text-align:right;"><div class="ul">Preguntas</div><div class="uv">${s.numPreguntas}</div></div>
+        <button class="btn btn-danger" style="font-size:.68rem;padding:.4rem .8rem;" onclick="eliminarSeleccionPrep(${i})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  const total=examenPreparacion.reduce((s,x)=>s+x.numPreguntas,0);
+  document.getElementById('totalPrepLabel').textContent=total.toLocaleString();
+  document.getElementById('btnGen').disabled=false;
+}
+
+function eliminarSeleccionPrep(i){
+  examenPreparacion.splice(i,1);
+  renderPrep();
+}
+
+function vaciarExamenPrep(){
+  if(!examenPreparacion.length) return;
+  if(!confirm('¿Vaciar el examen en preparación? Se perderán todas las selecciones añadidas.')) return;
+  examenPreparacion=[];
+  renderPrep();
+}
+
+// ══ GENERAR (misma lógica de siempre, aplicada a cada selección acumulada) ══
+function procesarSeleccion(cursosArr, temasActivos){
   let sel=[];
 
   // Por cada tema activo, seleccionar sus preguntas
@@ -1030,38 +1114,64 @@ function genExam(){
     sel=sel.concat(selTema);
   }
 
-  if(!sel.length){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">❌ No hay preguntas disponibles.</span>';return;}
-  document.getElementById('genMsg').innerHTML='';
+  return sel;
+}
 
-  // Incrementar contadores en TODOS los cursos seleccionados
-  sel.forEach(q=>{
-    const r=db.find(r=>r._idx===q._idx);
-    if(r) cursosArr.forEach(k=>{ r[k]=(r[k]||0)+1; });
-  });
+function genExamFromPrep(){
+  if(!examenPreparacion.length){document.getElementById('genMsgFinal').innerHTML='<span style="color:#e05555;font-size:.8rem;">Añade al menos una selección al examen.</span>';return;}
+  document.getElementById('genMsgFinal').innerHTML='';
+
+  let selTotal=[];
+  const cursosUnion=new Set();
+  const temasLabelsSet=new Set();
+
+  for(const seleccion of examenPreparacion){
+    const {cursosArr, temasActivos} = seleccion;
+    cursosArr.forEach(k=>cursosUnion.add(k));
+    temasActivos.forEach(([t])=>temasLabelsSet.add(t));
+
+    const sel=procesarSeleccion(cursosArr, temasActivos);
+
+    // Incrementar contadores en TODOS los cursos de esta selección
+    sel.forEach(q=>{
+      const r=db.find(r=>r._idx===q._idx);
+      if(r) cursosArr.forEach(k=>{ r[k]=(r[k]||0)+1; });
+    });
+
+    selTotal=selTotal.concat(sel);
+  }
+
+  if(!selTotal.length){document.getElementById('genMsgFinal').innerHTML='<span style="color:#e05555;font-size:.8rem;">❌ No hay preguntas disponibles.</span>';return;}
 
   // Ordenar por ID
-  sel.sort((a,b)=>String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));
+  selTotal.sort((a,b)=>String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));
 
+  const cursosArr=[...cursosUnion];
   examCount++; renderStats(); renderTable();
-  actualizarUsosenSheets(sel, cursosArr);
-  guardarExamenEnSheets(sel, cursosArr);
+  actualizarUsosenSheets(selTotal, cursosArr);
+  guardarExamenEnSheets(selTotal, cursosArr);
 
   const cursoLabel=cursosArr.map(k=>CURSO_LABEL[k]||k).join(' + ');
-  const tLabel=temasActivos.map(([t])=>t).join(', ');
+  const tLabel=[...temasLabelsSet].join(', ');
 
   // Calcular dificultades usadas en el examen
-  const difsUsadas=[...new Set(sel.map(q=>q.dificultad).filter(Boolean))];
+  const difsUsadas=[...new Set(selTotal.map(q=>q.dificultad).filter(Boolean))];
   const difLabel=difsUsadas.length===1?difsUsadas[0]:(difsUsadas.length>1?'Mixta':'Todas');
 
   currentExam={
     id:examCount,
     cursosArr,cursoLabel,
-    num:sel.length,
+    num:selTotal.length,
     dif:difLabel,
     temas:tLabel,
     fecha:new Date().toLocaleDateString('es-ES'),
-    preguntas:sel
+    preguntas:selTotal
   };
+
+  // El examen ya generado vacía el examen en preparación
+  examenPreparacion=[];
+  renderPrep();
+
   goTab('historial');
 }
 
@@ -1196,12 +1306,13 @@ function procesarFilasSheets(rows){
   renderStats();
   buildFilterTema('');
   renderTable();
-  selCursos.clear(); selBloques.clear(); temasCfg.clear();
+  selCursos.clear(); selBloques.clear(); temasCfg.clear(); examenPreparacion=[];
   ['mod1','mod2','mod3','int'].forEach(b=>{const el=document.getElementById('cb-'+b);if(el)el.classList.remove('on');});
   ['jur','soc','tec','ofi'].forEach(b=>{const el=document.getElementById('bbtn-'+b);if(el)el.classList.remove('on');});
   document.getElementById('cursoHint').textContent='Ningún curso seleccionado';
   document.getElementById('bloqueHint').textContent='Ningún bloque seleccionado';
   document.getElementById('paso3Card').style.display='none';
+  renderPrep();
   document.getElementById('tblCard').style.display='block';
   document.getElementById('statsCard').style.display='block';
   document.getElementById('uZone').classList.add('ok');
