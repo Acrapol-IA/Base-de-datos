@@ -1126,12 +1126,12 @@ function genExamFromPrep(){
 
   let selTotal=[];
   const temasLabelsSet=new Set();
-  const cursoLabelsVistos=[];
+  const cursoKeysVistos=[];
 
   for(const seleccion of examenPreparacion){
     const {cursosArr, temasActivos, cursoLabel} = seleccion;
     temasActivos.forEach(([t])=>temasLabelsSet.add(t));
-    if(!cursoLabelsVistos.includes(cursoLabel)) cursoLabelsVistos.push(cursoLabel);
+    cursosArr.forEach(k=>{ if(!cursoKeysVistos.includes(k)) cursoKeysVistos.push(k); });
 
     const sel=procesarSeleccion(cursosArr, temasActivos);
 
@@ -1154,7 +1154,7 @@ function genExamFromPrep(){
   actualizarUsosenSheets(selTotal);
   guardarExamenEnSheets(selTotal);
 
-  const cursoLabel=cursoLabelsVistos.join(' + ');
+  const cursoLabel=cursoKeysVistos.map(k=>CURSO_LABEL[k]||k).join(' + ');
   const tLabel=[...temasLabelsSet].join(', ');
 
   // Calcular dificultades usadas en el examen
