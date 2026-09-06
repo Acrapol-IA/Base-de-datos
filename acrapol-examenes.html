@@ -190,8 +190,8 @@ tbody tr:last-child td{border-bottom:none;}
 .ul{font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt3);}
 .uv{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;color:var(--txt3);font-weight:500;}
 
-.tema-cfg-hdr{display:grid;grid-template-columns:32px 1fr 90px 130px 110px 40px;gap:.5rem;align-items:center;padding:.45rem .85rem;background:var(--s3);border-radius:3px 3px 0 0;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.7rem;color:var(--txt3);margin-bottom:0;}
-.tema-cfg-row{display:grid;grid-template-columns:32px 1fr 90px 130px 110px 40px;gap:.5rem;align-items:center;padding:.55rem .85rem;border-bottom:1px solid var(--borde);transition:background .15s;}
+.tema-cfg-hdr{display:grid;grid-template-columns:32px 1fr 70px 62px 62px 62px 62px 96px;gap:.5rem;align-items:center;padding:.45rem .85rem;background:var(--s3);border-radius:3px 3px 0 0;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.7rem;color:var(--txt3);margin-bottom:0;}
+.tema-cfg-row{display:grid;grid-template-columns:32px 1fr 70px 62px 62px 62px 62px 96px;gap:.5rem;align-items:center;padding:.55rem .85rem;border-bottom:1px solid var(--borde);transition:background .15s;}
 .tema-cfg-row:last-child{border-bottom:none;}
 .tema-cfg-row:hover{background:rgba(255,255,255,.015);}
 .tema-cfg-row.activo{background:rgba(212,156,48,.04);}
@@ -202,21 +202,21 @@ tbody tr:last-child td{border-bottom:none;}
 .tema-cfg-row.activo .tnombre{color:var(--txt);}
 .tdisponibles{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--txt3);}
 .tema-cfg-row.activo .tdisponibles{color:var(--txt2);}
-.tdif select,.tnpregs input{background:var(--s3);border:1px solid var(--borde2);color:var(--txt);padding:.35rem .6rem;font-family:'IBM Plex Sans',sans-serif;font-size:.78rem;border-radius:3px;outline:none;-webkit-appearance:none;width:100%;transition:border-color .2s,opacity .2s;}
-.tdif select:focus,.tnpregs input:focus{border-color:var(--dorado);}
-.tema-cfg-row:not(.activo) .tdif select,
-.tema-cfg-row:not(.activo) .tnpregs input{opacity:.3;pointer-events:none;}
+.tdifn input{background:var(--s3);border:1px solid var(--borde2);color:var(--txt);padding:.35rem .3rem;font-family:'IBM Plex Sans',sans-serif;font-size:.78rem;border-radius:3px;outline:none;-webkit-appearance:none;width:100%;text-align:center;transition:border-color .2s,opacity .2s;}
+.tdifn input:focus{border-color:var(--dorado);}
+.tema-cfg-row:not(.activo) .tdifn input{opacity:.3;pointer-events:none;}
 .blq-sep-row{grid-column:1/-1;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.75rem;padding:.6rem .85rem .3rem;color:var(--txt3);border-bottom:1px solid var(--borde);}
-.tema-add-btn{width:26px;height:26px;border-radius:3px;border:1px solid var(--dorado);background:var(--dorado-dim);color:var(--dorado);font-size:.95rem;font-weight:600;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;justify-self:center;}
+.tema-add-btn{padding:.4rem .5rem;border-radius:3px;border:1px solid var(--dorado);background:var(--dorado-dim);color:var(--dorado);font-size:.68rem;font-weight:600;letter-spacing:.5px;white-space:nowrap;cursor:pointer;transition:all .15s;}
 .tema-add-btn:hover{background:var(--dorado);color:var(--negro);}
 
 /* EXAMEN EN PREPARACIÓN — lista compacta */
-.prep-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .85rem;border-bottom:1px solid var(--borde);font-size:.82rem;}
+.prep-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .85rem;border-bottom:1px solid var(--borde);font-size:.82rem;flex-wrap:wrap;}
 .prep-row:last-child{border-bottom:none;}
 .prep-row:hover{background:rgba(255,255,255,.018);}
-.prep-tema{color:var(--txt);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.prep-dif{color:var(--dorado);font-family:'IBM Plex Mono',monospace;font-size:.76rem;flex-shrink:0;}
-.prep-n{color:var(--txt2);font-family:'IBM Plex Mono',monospace;font-size:.76rem;flex-shrink:0;white-space:nowrap;}
+.prep-curso{color:var(--txt3);font-size:.76rem;flex-shrink:0;white-space:nowrap;}
+.prep-tema{color:var(--txt);flex-shrink:0;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;}
+.prep-dif{color:var(--dorado);font-family:'IBM Plex Mono',monospace;font-size:.76rem;}
+.prep-n{color:var(--txt2);font-family:'IBM Plex Mono',monospace;font-size:.76rem;flex-shrink:0;white-space:nowrap;margin-left:auto;}
 .prep-sep{color:var(--txt3);flex-shrink:0;}
 .prep-del{background:none;border:none;color:var(--txt3);font-size:.9rem;cursor:pointer;padding:.15rem .4rem;flex-shrink:0;border-radius:3px;transition:all .15s;}
 .prep-del:hover{color:#e05555;background:rgba(205,22,25,.12);}
@@ -408,9 +408,11 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="tema-cfg-hdr">
         <div></div>
         <div>Tema</div>
-        <div style="text-align:center;">Disponibles</div>
-        <div style="text-align:center;">Dificultad</div>
-        <div style="text-align:center;">Nº Preguntas</div>
+        <div style="text-align:center;">Disp.</div>
+        <div style="text-align:center;">Baja</div>
+        <div style="text-align:center;">Media</div>
+        <div style="text-align:center;">Alta</div>
+        <div style="text-align:center;">Todas</div>
         <div></div>
       </div>
       <div id="temasCfgList"></div>
@@ -901,14 +903,14 @@ function buildTemasCfg(){
           // Con promociones → una fila por promoción
           promos.forEach(pr=>{
             const key='OFI::'+bo+'::'+pr;
-            const prev=temasCfg.get(key)||{activo:false,dif:'',nPregs:10};
+            const prev=temasCfg.get(key)||{activo:false,nBaja:0,nMedia:0,nAlta:0,nTodas:0};
             nuevosCfg.set(key,{...prev,_bo:bo,_promo:pr,_bloque:bk,_label:pr});
             list.appendChild(buildTemaRow(pr, bv, prev, key));
           });
         } else {
           // Sin promociones → una sola fila para el bloque oficial
           const key='OFI::'+bo;
-          const prev=temasCfg.get(key)||{activo:false,dif:'',nPregs:10};
+          const prev=temasCfg.get(key)||{activo:false,nBaja:0,nMedia:0,nAlta:0,nTodas:0};
           nuevosCfg.set(key,{...prev,_bo:bo,_bloque:bk,_label:bo});
           list.appendChild(buildTemaRow(bo, bv, prev, key));
         }
@@ -918,7 +920,7 @@ function buildTemasCfg(){
         .sort((a,b)=>numTema(a)-numTema(b));
       if(!temas.length) continue;
       temas.forEach(t=>{
-        const prev=temasCfg.get(t)||{activo:false,dif:'',nPregs:10};
+        const prev=temasCfg.get(t)||{activo:false,nBaja:0,nMedia:0,nAlta:0,nTodas:0};
         nuevosCfg.set(t,{...prev,_tema:t,_bloque:bk,_label:t});
         list.appendChild(buildTemaRow(t, bv, prev, t));
       });
@@ -954,27 +956,23 @@ function buildTemaRow(t, bv, cfg, key){
   const row=document.createElement('div');
   row.className='tema-cfg-row'+(cfg.activo?' activo':'');
   row.dataset.tema=key;
+  const kEsc=key.replace(/'/g,"\\'");
 
   row.innerHTML=`
-    <div class="tcb ${cfg.activo?'on':''}" onclick="toggleTemaActivo('${key.replace(/'/g,"\'")}',this)">
+    <div class="tcb ${cfg.activo?'on':''}" onclick="toggleTemaActivo('${kEsc}',this)">
       <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
     </div>
     <div class="tnombre" title="${esc(t)}" style="color:${bv?bv.color:'var(--txt2)'}">${esc(t)}</div>
     <div class="tdisponibles">${dispStr}</div>
-    <div class="tdif">
-      <select onchange="updTemaCfg('${key.replace(/'/g,"\'")}','dif',this.value);updTotal()">
-        <option value="" ${!cfg.dif?'selected':''}>Todas</option>
-        <option value="Alta" ${cfg.dif==='Alta'?'selected':''}>Alta (${alta})</option>
-        <option value="Media" ${cfg.dif==='Media'?'selected':''}>Media (${media})</option>
-        <option value="Baja" ${cfg.dif==='Baja'?'selected':''}>Baja (${baja})</option>
-        ${oficial>0?`<option value="Oficial" ${cfg.dif==='Oficial'?'selected':''}>Oficial (${oficial})</option>`:''}
-      </select>
-    </div>
-    <div class="tnpregs">
-      <input type="number" value="${cfg.nPregs}" min="1" max="999"
-        oninput="updTemaCfg('${key.replace(/'/g,"\'")}','nPregs',+this.value);updTotal()">
-    </div>
-    <button type="button" class="tema-add-btn" title="Añadir este tema al examen" onclick="agregarTema('${key.replace(/'/g,"\'")}')">+</button>`;
+    <div class="tdifn"><input type="number" class="tdifn-input" data-campo="nBaja" value="${cfg.nBaja||0}" min="0" max="999"
+      oninput="updTemaDif('${kEsc}','nBaja',+this.value);updTotal()"></div>
+    <div class="tdifn"><input type="number" class="tdifn-input" data-campo="nMedia" value="${cfg.nMedia||0}" min="0" max="999"
+      oninput="updTemaDif('${kEsc}','nMedia',+this.value);updTotal()"></div>
+    <div class="tdifn"><input type="number" class="tdifn-input" data-campo="nAlta" value="${cfg.nAlta||0}" min="0" max="999"
+      oninput="updTemaDif('${kEsc}','nAlta',+this.value);updTotal()"></div>
+    <div class="tdifn"><input type="number" class="tdifn-input" data-campo="nTodas" value="${cfg.nTodas||0}" min="0" max="999"
+      oninput="updTemaDif('${kEsc}','nTodas',+this.value);updTotal()"></div>
+    <button type="button" class="tema-add-btn" title="Añadir este tema al examen" onclick="agregarTema('${kEsc}')">+ Añadir</button>`;
   return row;
 }
 
@@ -988,9 +986,28 @@ function toggleTemaActivo(t, checkEl){
   updTotal();
 }
 
-function updTemaCfg(t, key, val){
-  const cfg=temasCfg.get(t);
-  if(cfg) cfg[key]=val;
+// "Todas" es excluyente con Baja/Media/Alta: activar una desactiva (pone a 0)
+// la otra, reflejándolo también en los inputs ya pintados en pantalla.
+function updTemaDif(key, campo, val){
+  const cfg=temasCfg.get(key);
+  if(!cfg) return;
+  val=Math.max(0, Math.floor(val)||0);
+  cfg[campo]=val;
+
+  if(campo==='nTodas'){
+    if(val>0){ cfg.nBaja=0; cfg.nMedia=0; cfg.nAlta=0; }
+  } else if(val>0){
+    cfg.nTodas=0;
+  }
+
+  const row=document.querySelector(`.tema-cfg-row[data-tema="${CSS.escape(key)}"]`);
+  if(row){
+    ['nBaja','nMedia','nAlta','nTodas'].forEach(c=>{
+      if(c===campo) return;
+      const inp=row.querySelector(`.tdifn-input[data-campo="${c}"]`);
+      if(inp) inp.value=cfg[c];
+    });
+  }
 }
 
 function selTodosLosTemas(){
@@ -1013,7 +1030,7 @@ function deselTodosLosTemas(){
 
 function updTotal(){
   let tot=0;
-  temasCfg.forEach(cfg=>{if(cfg.activo) tot+=cfg.nPregs||0;});
+  temasCfg.forEach(cfg=>{if(cfg.activo) tot+=(cfg.nBaja||0)+(cfg.nMedia||0)+(cfg.nAlta||0)+(cfg.nTodas||0);});
   document.getElementById('totalSelLabel').textContent=tot.toLocaleString();
 }
 
@@ -1024,18 +1041,45 @@ function agregarTema(key){
   if(!selCursos.size){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Selecciona al menos un curso.</span>';return;}
   const cfg=temasCfg.get(key);
   if(!cfg) return;
+
+  // Una sub-configuración por cada dificultad con nº de preguntas > 0
+  // ('' = Todas, sin filtrar por dificultad)
+  const DIF_CAMPOS=[['nBaja','Baja'],['nMedia','Media'],['nAlta','Alta'],['nTodas','']];
+  const nuevas=DIF_CAMPOS
+    .filter(([campo])=>(cfg[campo]||0)>0)
+    .map(([campo,dif])=>({dif, nPregs:cfg[campo]}));
+
+  if(!nuevas.length){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Indica un nº de preguntas mayor que 0 en alguna dificultad.</span>';return;}
   document.getElementById('genMsg').innerHTML='';
 
   const cursosArr=[...selCursos];
   const cursoLabel=cursosArr.map(k=>CURSO_LABEL[k]||k).join(' + ');
-  const numPreguntas=cfg.nPregs||10;
 
-  examenPreparacion.push({ cursosArr, cursoLabel, temasActivos:[[key,{...cfg}]], numPreguntas });
+  // Si ya hay una línea para este mismo tema y curso en el examen en
+  // preparación, se actualiza (no se crea una línea visual nueva)
+  let entrada=examenPreparacion.find(s=>s.cursoLabel===cursoLabel && s.temasActivos.some(([k])=>k===key));
+  if(!entrada){
+    entrada={ cursosArr, cursoLabel, temasActivos:[], numPreguntas:0 };
+    examenPreparacion.push(entrada);
+  } else {
+    entrada.cursosArr=cursosArr;
+  }
 
-  // Solo se resetea la selección de temas para configurar el siguiente.
-  // El/los curso(s) y el/los bloque(s) seleccionados se mantienen.
-  temasCfg.clear();
-  buildTemasCfg();
+  nuevas.forEach(({dif,nPregs})=>{
+    const cfgNueva={...cfg, dif, nPregs};
+    delete cfgNueva.activo; delete cfgNueva.nBaja; delete cfgNueva.nMedia; delete cfgNueva.nAlta; delete cfgNueva.nTodas;
+    const idx=entrada.temasActivos.findIndex(([k,c])=>k===key && c.dif===dif);
+    if(idx>=0) entrada.temasActivos[idx]=[key,cfgNueva];
+    else entrada.temasActivos.push([key,cfgNueva]);
+  });
+  entrada.numPreguntas=entrada.temasActivos.reduce((s,[,c])=>s+(c.nPregs||0),0);
+
+  // Solo se ponen a 0 las cantidades de este tema. El/los curso(s), el/los
+  // bloque(s) y el resto de temas configurados se mantienen tal cual.
+  cfg.nBaja=0; cfg.nMedia=0; cfg.nAlta=0; cfg.nTodas=0;
+  const row=document.querySelector(`.tema-cfg-row[data-tema="${CSS.escape(key)}"]`);
+  if(row) row.querySelectorAll('.tdifn-input').forEach(inp=>{ inp.value=0; });
+  updTotal();
 
   renderPrep();
   mostrarToast('✅ Tema añadido al examen en preparación');
@@ -1053,15 +1097,17 @@ function renderPrep(){
   }
   card.style.display='block';
   list.innerHTML=examenPreparacion.map((s,i)=>{
-    const [,cfg]=s.temasActivos[0]||[null,{}];
-    const label=cfg._label||cfg._tema||'';
-    const dif=cfg.dif||'Todas';
+    const [,cfg0]=s.temasActivos[0]||[null,{}];
+    const label=cfg0._label||cfg0._tema||'';
+    const difsTxt=s.temasActivos.map(([,c])=>`${c.dif||'Todas'} ${c.nPregs}`).join(' | ');
     return `<div class="prep-row">
+      <span class="prep-curso">${esc(s.cursoLabel)}</span>
+      <span class="prep-sep">·</span>
       <span class="prep-tema" title="${esc(label)}">${esc(label)}</span>
       <span class="prep-sep">·</span>
-      <span class="prep-dif">${esc(dif)}</span>
+      <span class="prep-dif">${esc(difsTxt)}</span>
       <span class="prep-sep">·</span>
-      <span class="prep-n">${s.numPreguntas} preguntas</span>
+      <span class="prep-n">Total ${s.numPreguntas}</span>
       <button class="prep-del" onclick="eliminarSeleccionPrep(${i})" title="Eliminar">✕</button>
     </div>`;
   }).join('');
