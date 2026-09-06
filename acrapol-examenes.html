@@ -403,6 +403,7 @@ tbody tr:last-child td{border-bottom:none;}
         <div style="margin-left:auto;display:flex;gap:.5rem;">
           <button class="btn btn-ghost" style="font-size:.68rem;" onclick="selTodosLosTemas()">✔ Todos</button>
           <button class="btn btn-ghost" style="font-size:.68rem;" onclick="deselTodosLosTemas()">✕ Ninguno</button>
+          <button class="btn btn-gold" style="font-size:.68rem;" onclick="agregarSeleccionMasiva()">+ Añadir selección</button>
         </div>
       </div>
       <div class="tema-cfg-hdr">
@@ -1037,10 +1038,14 @@ function updTotal(){
 // ══ EXAMEN EN PREPARACIÓN (varias selecciones acumuladas) ══
 let examenPreparacion=[]; // [{ cursosArr, cursoLabel, temasActivos:[[key,cfgClone],...], numPreguntas }]
 
-function agregarTema(key){
-  if(!selCursos.size){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Selecciona al menos un curso.</span>';return;}
+// Añade al examen en preparación las dificultades (>0) configuradas para un
+// tema. No toca curso/bloques/otros temas: solo pone a 0 las cantidades de
+// ESTE tema tras añadirlo. Devuelve si realmente se añadió algo, para que
+// tanto el botón individual como la acción masiva puedan reaccionar.
+function procesarAgregarTema(key){
+  if(!selCursos.size) return {ok:false, motivo:'curso'};
   const cfg=temasCfg.get(key);
-  if(!cfg) return;
+  if(!cfg) return {ok:false, motivo:'nocfg'};
 
   // Una sub-configuración por cada dificultad con nº de preguntas > 0
   // ('' = Todas, sin filtrar por dificultad)
@@ -1049,8 +1054,7 @@ function agregarTema(key){
     .filter(([campo])=>(cfg[campo]||0)>0)
     .map(([campo,dif])=>({dif, nPregs:cfg[campo]}));
 
-  if(!nuevas.length){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Indica un nº de preguntas mayor que 0 en alguna dificultad.</span>';return;}
-  document.getElementById('genMsg').innerHTML='';
+  if(!nuevas.length) return {ok:false, motivo:'vacio'};
 
   const cursosArr=[...selCursos];
   const cursoLabel=cursosArr.map(k=>CURSO_LABEL[k]||k).join(' + ');
@@ -1075,14 +1079,55 @@ function agregarTema(key){
   entrada.numPreguntas=entrada.temasActivos.reduce((s,[,c])=>s+(c.nPregs||0),0);
 
   // Solo se ponen a 0 las cantidades de este tema. El/los curso(s), el/los
-  // bloque(s) y el resto de temas configurados se mantienen tal cual.
+  // bloque(s) y el resto de temas configurados (activos o no) se mantienen.
   cfg.nBaja=0; cfg.nMedia=0; cfg.nAlta=0; cfg.nTodas=0;
   const row=document.querySelector(`.tema-cfg-row[data-tema="${CSS.escape(key)}"]`);
   if(row) row.querySelectorAll('.tdifn-input').forEach(inp=>{ inp.value=0; });
-  updTotal();
 
+  return {ok:true};
+}
+
+function agregarTema(key){
+  const r=procesarAgregarTema(key);
+  if(!r.ok){
+    const msg = r.motivo==='curso'
+      ? 'Selecciona al menos un curso.'
+      : 'Indica un nº de preguntas mayor que 0 en alguna dificultad.';
+    document.getElementById('genMsg').innerHTML=`<span style="color:#e05555;font-size:.8rem;">${msg}</span>`;
+    return;
+  }
+  document.getElementById('genMsg').innerHTML='';
+  updTotal();
   renderPrep();
   mostrarToast('✅ Tema añadido al examen en preparación');
+}
+
+// Acción masiva: añade de una vez todas las dificultades (>0) de todos los
+// temas marcados con el checkbox, respetando la misma lógica que "+ Añadir"
+// individual (incluida la exclusión Todas/Baja-Media-Alta, ya aplicada al
+// escribir en los campos). No resetea curso, bloques ni la marca de los
+// temas: solo pone a 0 las cantidades de los temas que se hayan añadido.
+function agregarSeleccionMasiva(){
+  if(!selCursos.size){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Selecciona al menos un curso.</span>';return;}
+
+  const activos=[...temasCfg.entries()].filter(([,c])=>c.activo).map(([k])=>k);
+  if(!activos.length){document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Marca con el checkbox al menos un tema.</span>';return;}
+
+  let añadidos=0;
+  activos.forEach(key=>{
+    const r=procesarAgregarTema(key);
+    if(r.ok) añadidos++;
+  });
+
+  if(!añadidos){
+    document.getElementById('genMsg').innerHTML='<span style="color:#e05555;font-size:.8rem;">Los temas marcados no tienen ninguna cantidad mayor que 0.</span>';
+    return;
+  }
+
+  document.getElementById('genMsg').innerHTML='';
+  updTotal();
+  renderPrep();
+  mostrarToast(`✅ ${añadidos} tema${añadidos===1?'':'s'} añadido${añadidos===1?'':'s'} al examen en preparación`);
 }
 
 function renderPrep(){
