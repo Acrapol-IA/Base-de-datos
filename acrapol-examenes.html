@@ -86,8 +86,11 @@ nav{background:var(--s1);border-bottom:1px solid var(--borde);display:flex;paddi
 .simu-modelo-btn.on{background:rgba(46,204,113,.15);border-color:var(--verde);color:var(--verde);}
 .simu-row{display:grid;grid-template-columns:1fr 110px;gap:.75rem;align-items:center;padding:.45rem .85rem;border-bottom:1px solid var(--borde);}
 .simu-row:last-child{border-bottom:none;}
-.simu-row.bloque{background:var(--s3);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.75rem;}
+.simu-row.bloque{grid-template-columns:1fr 90px 110px;background:var(--s3);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.75rem;}
 .simu-row.tema{padding-left:1.9rem;font-size:.82rem;color:var(--txt2);}
+.simu-restante{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.5px;text-align:right;white-space:nowrap;color:var(--txt3);}
+.simu-restante.ok{color:#4ec88a;}
+.simu-restante.exceso{color:#e05555;}
 .simu-row input{background:var(--s3);border:1px solid var(--borde2);color:var(--txt);padding:.35rem .6rem;font-family:'IBM Plex Sans',sans-serif;font-size:.8rem;border-radius:3px;outline:none;-webkit-appearance:none;width:100%;text-align:center;transition:border-color .2s;}
 .simu-row input:focus{border-color:var(--dorado);}
 .simu-row.bloque input{color:var(--dorado);font-weight:600;}
@@ -458,15 +461,15 @@ tbody tr:last-child td{border-bottom:none;}
         </div>
       </div>
 
-      <div class="divider"><span>Preguntas por bloque y tema</span></div>
-      <div id="simuBloquesList" style="border:1px solid var(--borde);border-radius:4px;overflow:hidden;"></div>
-
       <div class="divider"><span>Dificultad global</span></div>
       <div class="form-row" style="grid-template-columns:repeat(3,140px);">
         <div class="fg"><label>Baja</label><input type="number" id="simuDifBaja" min="0" value="0" oninput="onSimuDifInput('Baja',+this.value)"></div>
         <div class="fg"><label>Media</label><input type="number" id="simuDifMedia" min="0" value="0" oninput="onSimuDifInput('Media',+this.value)"></div>
         <div class="fg"><label>Alta</label><input type="number" id="simuDifAlta" min="0" value="0" oninput="onSimuDifInput('Alta',+this.value)"></div>
       </div>
+
+      <div class="divider"><span>Preguntas por bloque y tema</span></div>
+      <div id="simuBloquesList" style="border:1px solid var(--borde);border-radius:4px;overflow:hidden;"></div>
 
       <div class="divider"><span>Modelo</span></div>
       <div class="bloque-btns" id="simuModelosBtns">
@@ -1246,6 +1249,7 @@ function buildSimulacroUI(){
     const bkEsc=bk.replace(/'/g,"\\'");
     html+=`<div class="simu-row bloque" style="color:${bv.color};">
       <span>${esc(bv.label)}</span>
+      <span class="simu-restante" data-bloque-restante="${esc(bk)}"></span>
       <input type="number" min="0" value="${simulacroBloques[bk]||0}" oninput="onSimuBloqueInput('${bkEsc}',+this.value)">
     </div>`;
     temas.forEach(t=>{
@@ -1301,7 +1305,29 @@ function validarSimulacro(){
   return errores;
 }
 
+// Cuánto falta (o sobra) por repartir entre los temas de cada bloque,
+// respecto al total asignado a ese bloque. Puramente informativo: no
+// interviene en la validación ni en el cálculo del modelo.
+function actualizarRestantesSimulacro(){
+  BLOQUES_SIMULACRO.forEach(bk=>{
+    const el=document.querySelector(`.simu-restante[data-bloque-restante="${CSS.escape(bk)}"]`);
+    if(!el) return;
+    const totalBloque=simulacroBloques[bk]||0;
+    let sumaTemas=0;
+    simulacroTemas.forEach(c=>{ if(c.bloque===bk) sumaTemas+=c.total||0; });
+    const restante=totalBloque-sumaTemas;
+    if(restante>=0){
+      el.textContent=`Restan ${restante}`;
+      el.className='simu-restante'+(restante===0?' ok':'');
+    } else {
+      el.textContent=`Exceso ${Math.abs(restante)}`;
+      el.className='simu-restante exceso';
+    }
+  });
+}
+
 function refrescarSimulacro(){
+  actualizarRestantesSimulacro();
   const errores=validarSimulacro();
   const val=document.getElementById('simuValidacion');
   const prevBox=document.getElementById('simuPreview');
