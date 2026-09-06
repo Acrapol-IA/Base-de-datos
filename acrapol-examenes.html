@@ -1882,12 +1882,44 @@ function guardarExamenEnSheets(preguntas, nombreExamen){
     ]);
   });
 
-  const exam = { rows };
-  const encoded = encodeURIComponent(JSON.stringify(exam));
-  fetch(`https://script.google.com/macros/s/AKfycbz8A8boQzNJDScZEb0-LN-5FofUZ4Zkb6ObjroLlz7-GoCE3HLEHFsRzkZWNVJAJOzo/exec?action=saveExamen&exam=${encoded}`)
+  enviarFilasExamenEnLotes(rows);
+}
+
+// Un examen grande (p. ej. un simulacro de 100 preguntas con texto real)
+// puede generar una URL de decenas de miles de caracteres si se manda de
+// una vez: muchos servidores/proxies la rechazan en silencio (a diferencia
+// de actualizarUsosenSheets, cuyo payload por pregunta es mucho más
+// pequeño). Por eso una tanda grande "generaba bien y actualizaba usos"
+// pero no llegaba a guardarse en EXAMENES. La solución es de transporte,
+// no de lógica: se agrupan las mismas filas ya construidas en lotes que
+// quepan con margen en una URL, y se envían uno tras otro (nunca en
+// paralelo, para no alterar el orden ni la fila donde empieza cada lote)
+// contra la MISMA acción "saveExamen" del Apps Script, sin tocarlo.
+function enviarFilasExamenEnLotes(rows){
+  const LIMITE_URL=6000; // longitud (ya codificada) máxima por lote, con margen amplio
+  const lotes=[];
+  let actual=[];
+  let tam=2; // "[]"
+  rows.forEach(row=>{
+    // Medido ya codificado: el texto en español (tildes, ¿, ñ...) se expande
+    // notablemente con encodeURIComponent, mucho más que su longitud "en crudo".
+    const tamFila=encodeURIComponent(JSON.stringify(row)).length+3;
+    if(actual.length && tam+tamFila>LIMITE_URL){ lotes.push(actual); actual=[]; tam=2; }
+    actual.push(row);
+    tam+=tamFila;
+  });
+  if(actual.length) lotes.push(actual);
+
+  let cadena=Promise.resolve();
+  lotes.forEach(loteRows=>{ cadena=cadena.then(()=>enviarLoteExamen(loteRows)); });
+  cadena.catch(err=>console.warn('Error guardando examen:', err));
+}
+
+function enviarLoteExamen(rows){
+  const encoded=encodeURIComponent(JSON.stringify({ rows }));
+  return fetch(`https://script.google.com/macros/s/AKfycbz8A8boQzNJDScZEb0-LN-5FofUZ4Zkb6ObjroLlz7-GoCE3HLEHFsRzkZWNVJAJOzo/exec?action=saveExamen&exam=${encoded}`)
     .then(r=>r.json())
-    .then(d=>{ if(!d.ok) console.warn('Error guardando examen:', d.error); })
-    .catch(err=>console.warn('Error guardando examen:', err));
+    .then(d=>{ if(!d.ok) console.warn('Error guardando examen:', d.error); });
 }
 
 // Reconstruye los exámenes a partir de las filas planas de la hoja EXAMENES:
