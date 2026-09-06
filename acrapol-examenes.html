@@ -1383,10 +1383,11 @@ function guardarExamenEnSheets(preguntas, nombreExamen){
     subtema: subtemas.join(', '),
     dificultad,
     total_preguntas: preguntas.length,
-    // Mismo orden en que se generó el examen (por ID), para poder mostrarlas
-    // más adelante en un historial desplegable.
-    ids_preguntas: preguntas.map(q=>q.id||'').join(', '),
-    preguntas: preguntas.map(q=>q.pregunta||'').join(' | ')
+    // Un elemento por pregunta, en el mismo orden en que se generó el examen.
+    // El Apps Script escribe una fila por pregunta: los metadatos anteriores
+    // solo van en la primera fila, y el resto quedan en blanco.
+    ids_preguntas: preguntas.map(q=>q.id||''),
+    preguntas: preguntas.map(q=>q.pregunta||'')
   };
 
   const encoded = encodeURIComponent(JSON.stringify(exam));
