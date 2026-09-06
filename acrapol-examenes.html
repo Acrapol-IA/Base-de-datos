@@ -1168,36 +1168,71 @@ function genExamFromPrep(){
   const nombreInput=document.getElementById('examNombreInput');
   const nombreExamen=(nombreInput?.value||'').trim();
 
-  examCount++; renderStats(); renderTable();
+  renderStats(); renderTable();
   actualizarUsosenSheets(selTotal);
-  guardarExamenEnSheets(selTotal, nombreExamen);
 
-  const cursoLabel=cursoKeysVistos.map(k=>CURSO_LABEL[k]||k).join(' + ');
-  const tLabel=[...temasLabelsSet].join(', ');
+  const btnGen=document.getElementById('btnGen');
+  if(btnGen) btnGen.disabled=true;
+  document.getElementById('genMsgFinal').innerHTML='<span style="color:var(--txt3);font-size:.8rem;"><span class="spin"></span>&nbsp;Generando examen…</span>';
 
-  // Calcular dificultades usadas en el examen
-  const difsUsadas=[...new Set(selTotal.map(q=>q.dificultad).filter(Boolean))];
-  const difLabel=difsUsadas.length===1?difsUsadas[0]:(difsUsadas.length>1?'Mixta':'Todas');
+  // El nº de examen se calcula a partir de los exámenes ya guardados en Google
+  // Sheets (no solo desde memoria del navegador), para que sea incremental y
+  // persistente aunque se recargue la página o haya varias sesiones abiertas.
+  obtenerSiguienteExamenId().then(nuevoId=>{
+    examCount=nuevoId;
+    guardarExamenEnSheets(selTotal, nombreExamen);
 
-  currentExam={
-    id:examCount,
-    nombre:nombreExamen||null,
-    cursoLabel,
-    num:selTotal.length,
-    dif:difLabel,
-    temas:tLabel,
-    fecha:new Date().toLocaleDateString('es-ES'),
-    preguntas:selTotal
-  };
+    const cursoLabel=cursoKeysVistos.map(k=>CURSO_LABEL[k]||k).join(' + ');
+    const tLabel=[...temasLabelsSet].join(', ');
 
-  mostrarToast(nombreExamen?`✅ Examen "${nombreExamen}" generado (${selTotal.length} preguntas)`:`✅ Examen #${examCount} generado (${selTotal.length} preguntas)`);
+    // Calcular dificultades usadas en el examen
+    const difsUsadas=[...new Set(selTotal.map(q=>q.dificultad).filter(Boolean))];
+    const difLabel=difsUsadas.length===1?difsUsadas[0]:(difsUsadas.length>1?'Mixta':'Todas');
 
-  // El examen ya generado vacía el examen en preparación y el nombre introducido
-  examenPreparacion=[];
-  if(nombreInput) nombreInput.value='';
-  renderPrep();
+    currentExam={
+      id:examCount,
+      nombre:nombreExamen||null,
+      cursoLabel,
+      num:selTotal.length,
+      dif:difLabel,
+      temas:tLabel,
+      fecha:new Date().toLocaleDateString('es-ES'),
+      preguntas:selTotal
+    };
 
-  goTab('historial');
+    mostrarToast(nombreExamen?`✅ Examen "${nombreExamen}" generado (${selTotal.length} preguntas)`:`✅ Examen #${examCount} generado (${selTotal.length} preguntas)`);
+
+    document.getElementById('genMsgFinal').innerHTML='';
+
+    // El examen ya generado vacía el examen en preparación y el nombre introducido
+    examenPreparacion=[];
+    if(nombreInput) nombreInput.value='';
+    renderPrep();
+
+    goTab('historial');
+  });
+}
+
+// Siguiente examen_id: el mayor visto en Google Sheets (o en el contador local
+// de esta sesión, por si acabamos de guardar uno que aún no se refleje) + 1.
+// Nunca reutiliza IDs antiguos.
+function obtenerSiguienteExamenId(){
+  return fetch(`https://script.google.com/macros/s/AKfycbz8A8boQzNJDScZEb0-LN-5FofUZ4Zkb6ObjroLlz7-GoCE3HLEHFsRzkZWNVJAJOzo/exec?action=getExamenes`)
+    .then(r=>r.json())
+    .then(data=>{
+      let maxId=0;
+      if(data.ok && Array.isArray(data.rows)){
+        data.rows.forEach(r=>{
+          const n=parseInt(r.examen_id,10);
+          if(!isNaN(n) && n>maxId) maxId=n;
+        });
+      }
+      return Math.max(maxId, examCount)+1;
+    })
+    .catch(()=>{
+      // Sin conexión: no bloqueamos la generación, seguimos con el contador local
+      return examCount+1;
+    });
 }
 
 
@@ -1488,9 +1523,10 @@ function cargarHistorial(){
       const examenes=agruparExamenesHistorial(data.rows);
       if(!examenes.length){ msg.innerHTML=`<div class="alert a-info">ℹ No hay exámenes guardados aún.</div>`; return; }
 
-      // Mostrar del más reciente al más antiguo (el orden de las preguntas
-      // dentro de cada examen respeta exactamente el de la hoja)
-      const examenesOrdenados=[...examenes].reverse();
+      // Orden cronológico: del más antiguo (arriba) al más reciente (abajo),
+      // por examen_id. El orden de las preguntas dentro de cada examen
+      // respeta exactamente el de la hoja.
+      const examenesOrdenados=[...examenes].sort((a,b)=>(parseInt(a.examen_id,10)||0)-(parseInt(b.examen_id,10)||0));
 
       const TH='padding:.55rem .8rem;font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;font-size:.68rem;color:var(--txt3);border-bottom:1px solid var(--borde2);white-space:nowrap;';
       const TD='padding:.5rem .8rem;color:var(--txt2);';
