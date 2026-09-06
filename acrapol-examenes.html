@@ -78,6 +78,23 @@ nav{background:var(--s1);border-bottom:1px solid var(--borde);display:flex;paddi
 .bbtn-soc{}.bbtn-soc.on{background:var(--soc-dim);border-color:var(--soc);color:var(--soc);}
 .bbtn-tec{}.bbtn-tec.on{background:var(--tec-dim);border-color:var(--tec);color:var(--tec);}
 .bbtn-ofi{}.bbtn-ofi.on{background:var(--ofi-dim);border-color:var(--ofi);color:var(--ofi);}
+.bbtn-simu{}.bbtn-simu.on{background:rgba(46,204,113,.14);border-color:var(--verde);color:var(--verde);}
+
+/* SIMULACROS */
+.simu-modelo-btn{padding:.55rem 1rem;border-radius:3px;font-size:.75rem;font-weight:600;letter-spacing:1px;cursor:pointer;border:1px solid var(--borde2);background:var(--s3);color:var(--txt3);transition:all .2s;}
+.simu-modelo-btn:hover{color:var(--txt2);}
+.simu-modelo-btn.on{background:rgba(46,204,113,.15);border-color:var(--verde);color:var(--verde);}
+.simu-row{display:grid;grid-template-columns:1fr 110px;gap:.75rem;align-items:center;padding:.45rem .85rem;border-bottom:1px solid var(--borde);}
+.simu-row:last-child{border-bottom:none;}
+.simu-row.bloque{background:var(--s3);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.75rem;}
+.simu-row.tema{padding-left:1.9rem;font-size:.82rem;color:var(--txt2);}
+.simu-row input{background:var(--s3);border:1px solid var(--borde2);color:var(--txt);padding:.35rem .6rem;font-family:'IBM Plex Sans',sans-serif;font-size:.8rem;border-radius:3px;outline:none;-webkit-appearance:none;width:100%;text-align:center;transition:border-color .2s;}
+.simu-row input:focus{border-color:var(--dorado);}
+.simu-row.bloque input{color:var(--dorado);font-weight:600;}
+.simu-preview-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.simu-preview-table th{padding:.5rem .7rem;text-align:left;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.68rem;color:var(--txt3);border-bottom:1px solid var(--borde2);background:var(--s3);}
+.simu-preview-table td{padding:.4rem .7rem;border-bottom:1px solid var(--borde);color:var(--txt2);}
+.simu-preview-table tfoot td{font-weight:600;color:var(--txt);border-top:2px solid var(--borde2);border-bottom:none;}
 
 /* CHIPS */
 .chips-box{background:var(--s3);border:1px solid var(--borde2);border-radius:3px;padding:.6rem;min-height:48px;max-height:180px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:.35rem;align-content:flex-start;transition:border-color .2s;}
@@ -390,6 +407,7 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="bbtn bbtn-soc" id="bbtn-soc" onclick="toggleBloque('Ciencias Sociales')">🌍 Ciencias Sociales</div>
         <div class="bbtn bbtn-tec" id="bbtn-tec" onclick="toggleBloque('Materias Técnico-Científicas')">🔬 Materias Técnicas</div>
         <div class="bbtn bbtn-ofi" id="bbtn-ofi" onclick="toggleBloque('Preguntas Oficiales')">🏅 Preguntas Oficiales</div>
+        <div class="bbtn bbtn-simu" id="bbtn-simulacros" onclick="toggleSimulacro()" style="display:none;">🧪 Simulacros</div>
       </div>
       <div class="chip-hint" id="bloqueHint" style="margin-top:.5rem;">Ningún bloque seleccionado</div>
     </div>
@@ -422,6 +440,50 @@ tbody tr:last-child td{border-bottom:none;}
           Total: <span id="totalSelLabel" style="font-family:'IBM Plex Mono',monospace;color:var(--dorado);font-size:1rem;font-weight:600;">0</span> preguntas
         </div>
         <div id="genMsg"></div>
+      </div>
+    </div>
+
+    <!-- SIMULACRO -->
+    <div class="card" id="simulacroCard" style="display:none;">
+      <div class="ctitle">
+        <div class="cico" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;">03</div>
+        <h2>Simulacro</h2>
+        <span style="margin-left:.5rem;font-size:.72rem;color:var(--txt3);">Define la distribución y elige un modelo</span>
+      </div>
+
+      <div class="form-row" style="grid-template-columns:180px;">
+        <div class="fg">
+          <label for="simuTotalInput">Total preguntas</label>
+          <input type="number" id="simuTotalInput" min="0" value="0" oninput="onSimuTotalInput(+this.value)">
+        </div>
+      </div>
+
+      <div class="divider"><span>Preguntas por bloque y tema</span></div>
+      <div id="simuBloquesList" style="border:1px solid var(--borde);border-radius:4px;overflow:hidden;"></div>
+
+      <div class="divider"><span>Dificultad global</span></div>
+      <div class="form-row" style="grid-template-columns:repeat(3,140px);">
+        <div class="fg"><label>Baja</label><input type="number" id="simuDifBaja" min="0" value="0" oninput="onSimuDifInput('Baja',+this.value)"></div>
+        <div class="fg"><label>Media</label><input type="number" id="simuDifMedia" min="0" value="0" oninput="onSimuDifInput('Media',+this.value)"></div>
+        <div class="fg"><label>Alta</label><input type="number" id="simuDifAlta" min="0" value="0" oninput="onSimuDifInput('Alta',+this.value)"></div>
+      </div>
+
+      <div class="divider"><span>Modelo</span></div>
+      <div class="bloque-btns" id="simuModelosBtns">
+        <div class="simu-modelo-btn on" id="simu-modelo-1" onclick="seleccionarModeloSimulacro(1)">MODELO 1</div>
+        <div class="simu-modelo-btn" id="simu-modelo-2" onclick="seleccionarModeloSimulacro(2)">MODELO 2</div>
+        <div class="simu-modelo-btn" id="simu-modelo-3" onclick="seleccionarModeloSimulacro(3)">MODELO 3</div>
+        <div class="simu-modelo-btn" id="simu-modelo-4" onclick="seleccionarModeloSimulacro(4)">MODELO 4</div>
+        <div class="simu-modelo-btn" id="simu-modelo-5" onclick="seleccionarModeloSimulacro(5)">MODELO 5</div>
+      </div>
+
+      <div id="simuValidacion" style="margin-top:1rem;"></div>
+
+      <div class="divider"><span>Vista previa</span></div>
+      <div id="simuPreview" style="overflow-x:auto;"></div>
+
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--borde);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <button class="btn btn-gold" onclick="confirmarSimulacro()" id="btnConfirmarSimulacro" style="margin-left:auto;" disabled>+ Añadir simulacro al examen</button>
       </div>
     </div>
 
@@ -846,10 +908,12 @@ function toggleCurso(key, label){
   else{selCursos.add(key);el.classList.add('on');}
   const names=[...selCursos].map(k=>CURSO_LABEL[k]||k);
   document.getElementById('cursoHint').textContent=names.length?'Seleccionados: '+names.join(' · '):'Ningún curso seleccionado';
+  actualizarVisibilidadSimulacro();
 }
 
 // ── PASO 2: BLOQUE ──
 function toggleBloque(bk){
+  if(modoSimulacro) toggleSimulacro(); // exclusivo con Simulacros
   const css=BBTN_MAP[bk];
   const el=document.getElementById('bbtn-'+css);
   if(selBloques.has(bk)){selBloques.delete(bk);el.classList.remove('on');}
@@ -1128,6 +1192,284 @@ function agregarSeleccionMasiva(){
   updTotal();
   renderPrep();
   mostrarToast(`✅ ${añadidos} tema${añadidos===1?'':'s'} añadido${añadidos===1?'':'s'} al examen en preparación`);
+}
+
+// ══ SIMULACROS ══
+// SIMULACROS es un constructor automático de la misma configuración
+// tema+dificultad que ya usa el flujo manual: define aquí una distribución
+// (total/bloque/tema + dificultad global) y, al confirmar un modelo, se
+// traduce en llamadas a procesarAgregarTema (la misma función que usa el
+// botón "+ Añadir" manual), sin tocar generación, usos, Sheets ni historial.
+const BLOQUES_SIMULACRO=['Ciencias Jurídicas','Ciencias Sociales','Materias Técnico-Científicas'];
+let modoSimulacro=false;
+let simulacroModelo=1;
+let simulacroTotal=0;
+let simulacroBloques={};        // { bloque: nº preguntas }
+let simulacroTemas=new Map();   // key(tema) -> { bloque, total }
+let simulacroDif={Baja:0,Media:0,Alta:0};
+
+function actualizarVisibilidadSimulacro(){
+  const disponible=selCursos.has('usos_mod3') || selCursos.has('usos_int');
+  const btn=document.getElementById('bbtn-simulacros');
+  if(btn) btn.style.display=disponible?'':'none';
+  if(!disponible && modoSimulacro) toggleSimulacro();
+}
+
+function toggleSimulacro(){
+  modoSimulacro=!modoSimulacro;
+  const btn=document.getElementById('bbtn-simulacros');
+  if(btn) btn.classList.toggle('on', modoSimulacro);
+
+  if(modoSimulacro){
+    // Exclusivo con la selección manual de bloques, para no mostrar dos
+    // paneles de configuración a la vez.
+    selBloques.clear();
+    ['jur','soc','tec','ofi'].forEach(b=>{const el=document.getElementById('bbtn-'+b);if(el)el.classList.remove('on');});
+    document.getElementById('paso3Card').style.display='none';
+    document.getElementById('bloqueHint').textContent='Modo Simulacro activo';
+    document.getElementById('simulacroCard').style.display='block';
+    buildSimulacroUI();
+  } else {
+    document.getElementById('simulacroCard').style.display='none';
+    document.getElementById('bloqueHint').textContent=selBloques.size?document.getElementById('bloqueHint').textContent:'Ningún bloque seleccionado';
+  }
+}
+
+function buildSimulacroUI(){
+  const list=document.getElementById('simuBloquesList');
+  let html='';
+  BLOQUES_SIMULACRO.forEach(bk=>{
+    const bv=BLOQUES_DEF[bk];
+    const temas=[...new Set(db.filter(r=>r.bloque===bk).map(r=>r.tema_nombre).filter(Boolean))].sort((a,b)=>numTema(a)-numTema(b));
+    if(!temas.length) return;
+    if(!(bk in simulacroBloques)) simulacroBloques[bk]=0;
+    const bkEsc=bk.replace(/'/g,"\\'");
+    html+=`<div class="simu-row bloque" style="color:${bv.color};">
+      <span>${esc(bv.label)}</span>
+      <input type="number" min="0" value="${simulacroBloques[bk]||0}" oninput="onSimuBloqueInput('${bkEsc}',+this.value)">
+    </div>`;
+    temas.forEach(t=>{
+      if(!simulacroTemas.has(t)) simulacroTemas.set(t,{bloque:bk,total:0});
+      const cfgT=simulacroTemas.get(t);
+      const tEsc=t.replace(/'/g,"\\'");
+      html+=`<div class="simu-row tema">
+        <span>${esc(t)}</span>
+        <input type="number" min="0" value="${cfgT.total||0}" oninput="onSimuTemaInput('${tEsc}',+this.value)">
+      </div>`;
+    });
+  });
+  list.innerHTML=html || '<div style="padding:1rem;color:var(--txt3);font-size:.8rem;text-align:center;">Carga primero la base de datos.</div>';
+  refrescarSimulacro();
+}
+
+function onSimuTotalInput(val){ simulacroTotal=Math.max(0,Math.floor(val)||0); refrescarSimulacro(); }
+function onSimuBloqueInput(bk,val){ simulacroBloques[bk]=Math.max(0,Math.floor(val)||0); refrescarSimulacro(); }
+function onSimuTemaInput(key,val){
+  const cfgT=simulacroTemas.get(key);
+  if(!cfgT) return;
+  cfgT.total=Math.max(0,Math.floor(val)||0);
+  refrescarSimulacro();
+}
+function onSimuDifInput(campo,val){ simulacroDif[campo]=Math.max(0,Math.floor(val)||0); refrescarSimulacro(); }
+
+function validarSimulacro(){
+  const errores=[];
+  if(simulacroTotal<=0) errores.push('Indica el nº total de preguntas del simulacro.');
+
+  let sumaBloques=0;
+  BLOQUES_SIMULACRO.forEach(bk=>{
+    const totalBloque=simulacroBloques[bk]||0;
+    sumaBloques+=totalBloque;
+    let sumaTemas=0;
+    simulacroTemas.forEach(c=>{ if(c.bloque===bk) sumaTemas+=c.total||0; });
+    if(totalBloque>0 || sumaTemas>0){
+      if(sumaTemas!==totalBloque){
+        errores.push(`${BLOQUES_DEF[bk].label}: la suma de temas (${sumaTemas}) no coincide con el total del bloque (${totalBloque}).`);
+      }
+    }
+  });
+  if(sumaBloques!==simulacroTotal){
+    errores.push(`La suma de los bloques (${sumaBloques}) no coincide con el total del simulacro (${simulacroTotal}).`);
+  }
+
+  const b=simulacroDif.Baja||0, m=simulacroDif.Media||0, a=simulacroDif.Alta||0;
+  if(b+m+a!==simulacroTotal){
+    errores.push(`Baja+Media+Alta (${b+m+a}) no coincide con el total del simulacro (${simulacroTotal}).`);
+  }
+  if(b<0||m<0||a<0) errores.push('Ninguna dificultad puede ser negativa.');
+
+  return errores;
+}
+
+function refrescarSimulacro(){
+  const errores=validarSimulacro();
+  const val=document.getElementById('simuValidacion');
+  const prevBox=document.getElementById('simuPreview');
+  const btn=document.getElementById('btnConfirmarSimulacro');
+  if(errores.length){
+    val.innerHTML=`<div class="alert a-warn">${errores.map(e=>esc(e)).join('<br>')}</div>`;
+    prevBox.innerHTML='';
+    if(btn) btn.disabled=true;
+    return;
+  }
+  val.innerHTML=`<div class="alert a-ok">✅ Configuración cuadrada</div>`;
+  if(btn) btn.disabled=false;
+  const matriz=calcularMatrizModelo(simulacroModelo);
+  renderSimuPreview(matriz);
+}
+
+function seleccionarModeloSimulacro(n){
+  simulacroModelo=n;
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('simu-modelo-'+i);
+    if(el) el.classList.toggle('on', i===n);
+  }
+  refrescarSimulacro();
+}
+
+// PRNG determinista (mulberry32): mismo modelo + misma config -> misma matriz
+function mulberry32(seed){
+  return function(){
+    seed|=0; seed=(seed+0x6D2B79F5)|0;
+    let t=Math.imul(seed^(seed>>>15), 1|seed);
+    t=(t+Math.imul(t^(t>>>7), 61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+function shuffleSeeded(arr, rng){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+// Reparte Baja/Media/Alta entre temas respetando el total fijo de cada uno
+// (las cantidades por tema/bloque/total NUNCA las toca el modelo, solo decide
+// qué parte de cada tema es de cada dificultad). Determinista por modelo
+// (seedIndex 0..4) y pensado para maximizar la variedad entre modelos.
+function distribuirModelo(temas, objetivo, seedIndex){
+  const nTemas=temas.length;
+  const matriz=new Map(temas.map(t=>[t.key,{Baja:0,Media:0,Alta:0}]));
+  if(!nTemas) return matriz;
+
+  const restanteTema=new Map(temas.map(t=>[t.key,t.total]));
+  const ordenesDif=[
+    ['Baja','Media','Alta'],
+    ['Media','Alta','Baja'],
+    ['Alta','Baja','Media'],
+    ['Media','Baja','Alta'],
+    ['Alta','Media','Baja'],
+  ];
+  const ordenDif=ordenesDif[((seedIndex%ordenesDif.length)+ordenesDif.length)%ordenesDif.length];
+  const rng=mulberry32(1000*(seedIndex+1)+17);
+
+  ordenDif.forEach(dif=>{
+    let restante=objetivo[dif]||0;
+    if(restante<=0) return;
+    let sinProgreso=0;
+    while(restante>0){
+      // Una permutación distinta en cada ronda (semilla propia del modelo),
+      // para que las preguntas de una dificultad no recaigan siempre en el
+      // mismo orden de temas.
+      const orden=shuffleSeeded(temas, rng);
+      let asignadoEnRonda=false;
+      for(let k=0;k<nTemas && restante>0;k++){
+        const t=orden[k];
+        const cap=restanteTema.get(t.key);
+        if(cap<=0) continue;
+        matriz.get(t.key)[dif]+=1;
+        restanteTema.set(t.key, cap-1);
+        restante-=1;
+        asignadoEnRonda=true;
+      }
+      if(!asignadoEnRonda){ sinProgreso++; if(sinProgreso>2) break; } else { sinProgreso=0; }
+    }
+  });
+
+  return matriz;
+}
+
+function calcularMatrizModelo(modeloIdx){
+  const temas=[...simulacroTemas.entries()]
+    .filter(([,c])=>(c.total||0)>0)
+    .map(([key,c])=>({key, bloque:c.bloque, total:c.total}));
+  const objetivo={Baja:simulacroDif.Baja||0, Media:simulacroDif.Media||0, Alta:simulacroDif.Alta||0};
+  return distribuirModelo(temas, objetivo, modeloIdx-1);
+}
+
+function renderSimuPreview(matriz){
+  let filas='';
+  let totT=0,totB=0,totM=0,totA=0;
+  BLOQUES_SIMULACRO.forEach(bk=>{
+    const bv=BLOQUES_DEF[bk];
+    [...simulacroTemas.entries()]
+      .filter(([,c])=>c.bloque===bk && (c.total||0)>0)
+      .sort((a,b)=>numTema(a[0])-numTema(b[0]))
+      .forEach(([key,c])=>{
+        const m=matriz.get(key)||{Baja:0,Media:0,Alta:0};
+        totT+=c.total; totB+=m.Baja; totM+=m.Media; totA+=m.Alta;
+        filas+=`<tr>
+          <td style="color:${bv.color};">${esc(bv.label)}</td>
+          <td>${esc(key)}</td>
+          <td>${c.total}</td>
+          <td>${m.Baja}</td>
+          <td>${m.Media}</td>
+          <td>${m.Alta}</td>
+        </tr>`;
+      });
+  });
+  document.getElementById('simuPreview').innerHTML=`
+    <table class="simu-preview-table">
+      <thead><tr><th>Bloque</th><th>Tema</th><th>Total</th><th>Baja</th><th>Media</th><th>Alta</th></tr></thead>
+      <tbody>${filas}</tbody>
+      <tfoot><tr><td colspan="2">TOTAL</td><td>${totT}</td><td>${totB}</td><td>${totM}</td><td>${totA}</td></tr></tfoot>
+    </table>`;
+}
+
+function confirmarSimulacro(){
+  const errores=validarSimulacro();
+  if(errores.length) return; // el botón ya está deshabilitado; defensivo
+  if(!selCursos.size){document.getElementById('simuValidacion').innerHTML='<div class="alert a-err">❌ Selecciona al menos un curso.</div>';return;}
+
+  const temasConTotal=[...simulacroTemas.entries()].filter(([,c])=>(c.total||0)>0);
+  if(!temasConTotal.length) return;
+
+  const matriz=calcularMatrizModelo(simulacroModelo);
+
+  // Reutiliza exactamente el mecanismo existente: se rellena temasCfg (via
+  // buildTemasCfg, igual que al seleccionar bloques a mano) con los bloques
+  // reales usados por el simulacro, y se llama a procesarAgregarTema por
+  // cada tema — la misma función que usa el botón "+ Añadir" manual.
+  const bloquesUsados=[...new Set(temasConTotal.map(([,c])=>c.bloque))];
+  selBloques=new Set(bloquesUsados);
+  buildTemasCfg();
+  document.getElementById('paso3Card').style.display='none'; // seguimos en modo Simulacro
+
+  let añadidos=0;
+  temasConTotal.forEach(([key])=>{
+    const cfg=temasCfg.get(key);
+    if(!cfg) return;
+    const m=matriz.get(key)||{Baja:0,Media:0,Alta:0};
+    cfg.nBaja=m.Baja||0; cfg.nMedia=m.Media||0; cfg.nAlta=m.Alta||0; cfg.nTodas=0;
+    const r=procesarAgregarTema(key);
+    if(r.ok) añadidos++;
+  });
+
+  updTotal();
+  renderPrep();
+  mostrarToast(`✅ Simulacro (Modelo ${simulacroModelo}): ${añadidos} tema${añadidos===1?'':'s'} añadido${añadidos===1?'':'s'} al examen en preparación`);
+
+  // Solo se reinicia la configuración propia del simulacro que se acaba de
+  // añadir. El curso seleccionado (Módulo 3/Intensivo) y el modo Simulacro
+  // se mantienen, para poder montar uno nuevo a continuación.
+  simulacroTotal=0;
+  simulacroBloques={};
+  simulacroTemas=new Map();
+  simulacroDif={Baja:0,Media:0,Alta:0};
+  document.getElementById('simuTotalInput').value=0;
+  document.getElementById('simuDifBaja').value=0;
+  document.getElementById('simuDifMedia').value=0;
+  document.getElementById('simuDifAlta').value=0;
+  buildSimulacroUI();
 }
 
 function renderPrep(){
