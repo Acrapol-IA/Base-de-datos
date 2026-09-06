@@ -1352,46 +1352,43 @@ function actualizarUsosenSheets(preguntas, cursosArr){
 
 // ══ HISTORIAL DE EXÁMENES ══
 function guardarExamenEnSheets(preguntas, nombreExamen){
-  const fecha    = new Date().toLocaleDateString('es-ES');
-  const total    = preguntas.length;
+  const fecha = new Date().toLocaleDateString('es-ES');
 
-  // Construir filas: una por pregunta, repetir solo cuando cambia
-  const rows = [];
-  let lastCurso='', lastBloque='', lastSub='';
-
-  preguntas.forEach((q,i)=>{
+  // El Apps Script guarda una sola fila por examen (hoja EXAMENES), no una por
+  // pregunta: se agregan aquí los valores únicos usados, en el orden en que
+  // aparecen en las preguntas ya generadas.
+  const cursos=[], bloques=[], subbloques=[], temas=[], subtemas=[];
+  preguntas.forEach(q=>{
+    const cursoReal  = q._cursoLabel || '';
     const bloqueReal = q.bloque==='Preguntas Oficiales' ? q.subbloque : q.bloque;
     const subReal    = q.promo || '';
-    const cursoReal  = q._cursoLabel || '';
-
-    const fFecha  = (i===0)               ? fecha       : '';
-    const fId     = (i===0)               ? examCount   : '';
-    // El curso se muestra por pregunta según la selección de la que proviene,
-    // repitiendo solo cuando cambia (igual que bloque/subbloque)
-    const fCurso  = (cursoReal!==lastCurso) ? cursoReal : '';
-    const fTotal  = (i===0)               ? total       : '';
-    const fBloque = (bloqueReal!==lastBloque) ? bloqueReal : '';
-    const fSub    = (subReal!==lastSub || bloqueReal!==lastBloque) ? subReal : '';
-
-    lastCurso  = cursoReal;
-    lastBloque = bloqueReal;
-    lastSub    = subReal;
-
-    rows.push([
-      fFecha, fId, fCurso,
-      fBloque, fSub,
-      q.tema_nombre||'', '',
-      q.dificultad||'',
-      fTotal,
-      q.id||'',
-      q.pregunta||''
-    ]);
+    if(cursoReal     && !cursos.includes(cursoReal))       cursos.push(cursoReal);
+    if(bloqueReal    && !bloques.includes(bloqueReal))     bloques.push(bloqueReal);
+    if(subReal       && !subbloques.includes(subReal))     subbloques.push(subReal);
+    if(q.tema_nombre && !temas.includes(q.tema_nombre))    temas.push(q.tema_nombre);
+    if(q.subtema     && !subtemas.includes(q.subtema))     subtemas.push(q.subtema);
   });
 
-  // "nombre" se envía aparte de las filas: es un dato del examen completo,
-  // no de cada pregunta. Si se deja vacío, el sistema de identificación actual
-  // (fecha, examen_id, curso, etc.) sigue funcionando igual.
-  const exam = { rows, nombre: nombreExamen||'' };
+  const difsUsadas = [...new Set(preguntas.map(q=>q.dificultad).filter(Boolean))];
+  const dificultad = difsUsadas.length===1 ? difsUsadas[0] : (difsUsadas.length>1 ? 'Mixta' : 'Todas');
+
+  const exam = {
+    fecha,
+    examen_id: examCount,
+    nombre: nombreExamen||'',
+    curso: cursos.join(' + '),
+    bloque: bloques.join(', '),
+    subbloque: subbloques.join(', '),
+    temas: temas.join(', '),
+    subtema: subtemas.join(', '),
+    dificultad,
+    total_preguntas: preguntas.length,
+    // Mismo orden en que se generó el examen (por ID), para poder mostrarlas
+    // más adelante en un historial desplegable.
+    ids_preguntas: preguntas.map(q=>q.id||'').join(', '),
+    preguntas: preguntas.map(q=>q.pregunta||'').join(' | ')
+  };
+
   const encoded = encodeURIComponent(JSON.stringify(exam));
   fetch(`https://script.google.com/macros/s/AKfycbz8A8boQzNJDScZEb0-LN-5FofUZ4Zkb6ObjroLlz7-GoCE3HLEHFsRzkZWNVJAJOzo/exec?action=saveExamen&exam=${encoded}`)
     .then(r=>r.json())
