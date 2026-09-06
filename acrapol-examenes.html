@@ -1354,42 +1354,54 @@ function actualizarUsosenSheets(preguntas, cursosArr){
 function guardarExamenEnSheets(preguntas, nombreExamen){
   const fecha = new Date().toLocaleDateString('es-ES');
 
-  // El Apps Script guarda una sola fila por examen (hoja EXAMENES), no una por
-  // pregunta: se agregan aquí los valores únicos usados, en el orden en que
-  // aparecen en las preguntas ya generadas.
-  const cursos=[], bloques=[], subbloques=[], temas=[], subtemas=[];
+  // Curso agregado de todo el examen (únicos, en orden de aparición): solo
+  // se muestra una vez, en la primera fila.
+  const cursos=[];
   preguntas.forEach(q=>{
-    const cursoReal  = q._cursoLabel || '';
-    const bloqueReal = q.bloque==='Preguntas Oficiales' ? q.subbloque : q.bloque;
-    const subReal    = q.promo || '';
-    if(cursoReal     && !cursos.includes(cursoReal))       cursos.push(cursoReal);
-    if(bloqueReal    && !bloques.includes(bloqueReal))     bloques.push(bloqueReal);
-    if(subReal       && !subbloques.includes(subReal))     subbloques.push(subReal);
-    if(q.tema_nombre && !temas.includes(q.tema_nombre))    temas.push(q.tema_nombre);
-    if(q.subtema     && !subtemas.includes(q.subtema))     subtemas.push(q.subtema);
+    const cursoReal=q._cursoLabel||'';
+    if(cursoReal && !cursos.includes(cursoReal)) cursos.push(cursoReal);
+  });
+  const cursoLabel=cursos.join(' + ');
+
+  // Una fila por pregunta, en el mismo orden en que se generó el examen.
+  // bloque/subbloque/tema/subtema se muestran en cascada: cada nivel solo se
+  // repite cuando cambia él mismo o alguno de los niveles superiores
+  // (bloque > subbloque > tema > subtema). La dificultad, en cambio, va
+  // siempre completa: es la dificultad real de esa pregunta, nunca un
+  // agregado tipo "Mixta".
+  const rows=[];
+  let lastBloque='', lastSub='', lastTema='', lastSubtema='';
+
+  preguntas.forEach((q,i)=>{
+    const bloqueReal  = q.bloque==='Preguntas Oficiales' ? q.subbloque : q.bloque;
+    const subReal     = q.promo || '';
+    const temaReal    = q.tema_nombre || '';
+    const subtemaReal = q.subtema || '';
+
+    const bloqueCambio  = bloqueReal  !== lastBloque;
+    const subCambio     = subReal     !== lastSub    || bloqueCambio;
+    const temaCambio    = temaReal    !== lastTema    || subCambio;
+    const subtemaCambio = subtemaReal !== lastSubtema || temaCambio;
+
+    lastBloque=bloqueReal; lastSub=subReal; lastTema=temaReal; lastSubtema=subtemaReal;
+
+    rows.push([
+      i===0 ? fecha             : '',
+      i===0 ? examCount         : '',
+      i===0 ? (nombreExamen||'') : '',
+      i===0 ? cursoLabel        : '',
+      bloqueCambio  ? bloqueReal  : '',
+      subCambio     ? subReal     : '',
+      temaCambio    ? temaReal    : '',
+      subtemaCambio ? subtemaReal : '',
+      q.dificultad||'',
+      i===0 ? preguntas.length : '',
+      q.id||'',
+      q.pregunta||''
+    ]);
   });
 
-  const difsUsadas = [...new Set(preguntas.map(q=>q.dificultad).filter(Boolean))];
-  const dificultad = difsUsadas.length===1 ? difsUsadas[0] : (difsUsadas.length>1 ? 'Mixta' : 'Todas');
-
-  const exam = {
-    fecha,
-    examen_id: examCount,
-    nombre: nombreExamen||'',
-    curso: cursos.join(' + '),
-    bloque: bloques.join(', '),
-    subbloque: subbloques.join(', '),
-    temas: temas.join(', '),
-    subtema: subtemas.join(', '),
-    dificultad,
-    total_preguntas: preguntas.length,
-    // Un elemento por pregunta, en el mismo orden en que se generó el examen.
-    // El Apps Script escribe una fila por pregunta: los metadatos anteriores
-    // solo van en la primera fila, y el resto quedan en blanco.
-    ids_preguntas: preguntas.map(q=>q.id||''),
-    preguntas: preguntas.map(q=>q.pregunta||'')
-  };
-
+  const exam = { rows };
   const encoded = encodeURIComponent(JSON.stringify(exam));
   fetch(`https://script.google.com/macros/s/AKfycbz8A8boQzNJDScZEb0-LN-5FofUZ4Zkb6ObjroLlz7-GoCE3HLEHFsRzkZWNVJAJOzo/exec?action=saveExamen&exam=${encoded}`)
     .then(r=>r.json())
